@@ -35,7 +35,7 @@ def http_request(url, method="GET", data=None, headers=None):
 
 # Ví dụ sử dụng:
 if __name__ == "__main__":
-    url = "api.cloudflare.com"
+    url = "https://api.cloudflare.com/client/v4"
 
     # GET Request
     print("GET Response: ")
