@@ -6,14 +6,14 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O "$@"
+         --keep-session-cookies --timeout=30 -nv -O "$1" "$2"
 }
 
 download_resources() {
     for repo in revanced-patches revanced-cli; do
         githubApiUrl="https://api.github.com/repos/revanced/$repo/releases"
-        page=$(req - 2>/dev/null $githubApiUrl)
-        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
+        page=$(req - 2>/dev/null "$githubApiUrl")
+        assetUrls=$(echo "$page" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl assetName; do
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
