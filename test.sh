@@ -63,6 +63,6 @@ find_max_version() {
 }
 
 # Gọi hàm với package cần tìm và gán kết quả vào biến
-version=$(find_max_version "com.google.android.youtube")
+version=$(find_max_version "com.soundcloud.android")
 
 echo $version
