@@ -126,7 +126,7 @@ apply_patches() {
     
     # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
-        --patch-bundle revanced-patches*.jar \
+        --patch-bundle patches*.jar \
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "$name-revanced-v$version.apk" \
         "$name-v$version.apk"
