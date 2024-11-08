@@ -32,6 +32,6 @@ find_max_version() {
 
 download_resources
 
-version=$(find_max_version "com.zhiliaoapp.musically")
+version=$(find_max_version "com.reddit.frontpage")
 
 echo "$version"
