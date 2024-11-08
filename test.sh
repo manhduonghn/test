@@ -21,3 +21,5 @@ download_resources() {
 }
 
 download_resources
+
+java -jar revanced-cli*.jar -h
