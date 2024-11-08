@@ -32,7 +32,7 @@ find_max_version() {
 
     # Kiểm tra nếu output không có kết quả hoặc có lỗi
     if [[ -z "$output" ]]; then
-        echo "Không có thông tin cho package: $package_name"
+        echo "None"
         return
     fi
 
@@ -41,7 +41,7 @@ find_max_version() {
 
     # Kiểm tra nếu không có phiên bản nào hoặc phiên bản là 'Any'
     if [[ -z "$versions" || "$versions" == "Any" ]]; then
-        echo "Phiên bản cao nhất là: None"
+        echo "None"
         return
     fi
 
@@ -58,8 +58,11 @@ find_max_version() {
         max_version=$(compare_versions "$max_version" "$version")
     done <<< "$versions"
 
-    echo "Phiên bản cao nhất là: $max_version"
+    # Trả về phiên bản cao nhất
+    echo "$max_version"
 }
 
-# Gọi hàm với package cần tìm
-find_max_version "com.google.android.youtube"
+# Gọi hàm với package cần tìm và gán kết quả vào biến
+version=$(find_max_version "com.google.android.youtube")
+
+echo $version
