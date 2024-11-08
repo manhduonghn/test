@@ -21,8 +21,6 @@ download_resources() {
     done
 }
 
-download_resources
-
 find_max_version() {
     package_name=$1
     output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
@@ -32,16 +30,15 @@ find_max_version() {
         echo ""
         return
     fi
-    compare_versions() {
-        printf "%s\n%s" "$1" "$2" | sort -V | tail -n 1
-    }
-    max_version=$(echo "$versions" | head -n 1)
-    while read -r version; do
-        max_version=$(compare_versions "$max_version" "$version")
-    done <<< "$versions"
-    
+
+    max_version=$(echo "$versions" | sort -V | tail -n 1)
     echo "$max_version"
 }
 
+# Main
+
+download_resources
+
 version=$(find_max_version "com.soundcloud.android")
+
 echo "$version"
