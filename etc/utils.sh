@@ -126,7 +126,7 @@ apply_patches() {
     
     # Apply patches using Revanced tools
     java -jar revanced-cli*.jar patch \
-        --patch-bundle patches*.jar \
+        --patch-bundle patches*.rvp \
         "${excludePatches[@]}" "${includePatches[@]}" \
         --out "$name-revanced-v$version.apk" \
         "$name-v$version.apk"
@@ -165,7 +165,7 @@ create_github_release() {
     uploadRelease="https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases"
     apkFilePath=$(find . -type f -name "$name-revanced*.apk")
     apkFileName=$(basename "$apkFilePath")
-    patchver=$(ls -1 patches*.jar | grep -oP '\d+(\.\d+)+')
+    patchver=$(ls -1 patches*.rvp | grep -oP '\d+(\.\d+)+')
     cliver=$(ls -1 revanced-cli*.jar | grep -oP '\d+(\.\d+)+')
     tagName="v$patchver"
 
