@@ -23,11 +23,11 @@ download_resources() {
 
 download_resources
 
-# Chạy lệnh và lưu kết quả vào biến
+# Chạy lệnh và lưu kết quả vào biến (thay thế bằng đầu ra thực tế của lệnh)
 output=$(java -jar revanced-cli*.jar list-versions -f com.google.android.youtube patch*.rvp)
 
-# Trích xuất các phiên bản từ kết quả của lệnh
-versions=$(echo "$output" | grep -oP '^\s*\d+(\.\d+)+')
+# Loại bỏ 2 dòng đầu tiên, loại bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
+versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
 
 # Hàm so sánh hai phiên bản và trả về phiên bản cao nhất
 compare_versions() {
