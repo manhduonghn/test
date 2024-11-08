@@ -116,8 +116,8 @@ apply_patches() {
     for line in "${lines[@]}"; do
         if [[ -n "$line" && ( ${line:0:1} == "+" || ${line:0:1} == "-" ) ]]; then
             patch_name=$(sed -e 's/^[+|-] *//;s/ *$//' <<< "$line") 
-            [[ ${line:0:1} == "+" ]] && includePatches+=("--include" "$patch_name")
-            [[ ${line:0:1} == "-" ]] && excludePatches+=("--exclude" "$patch_name")
+            [[ ${line:0:1} == "+" ]] && includePatches+=("-i" "$patch_name")
+            [[ ${line:0:1} == "-" ]] && excludePatches+=("-e" "$patch_name")
         fi
     done
     
