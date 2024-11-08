@@ -39,6 +39,6 @@ find_max_version() {
 
 download_resources
 
-version=$(find_max_version "com.facebook.orca")
+version=$(find_max_version "com.google.android.apps.youtube.music")
 
 echo "$version"
