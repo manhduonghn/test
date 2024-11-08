@@ -24,7 +24,9 @@ download_resources() {
 download_resources
 
 # Chạy lệnh và lưu kết quả vào biến (thay thế bằng đầu ra thực tế của lệnh)
-output=$(java -jar revanced-cli*.jar list-versions -f com.google.android.youtube patch*.rvp)
+output=$(java -jar revanced-cli*.jar list-versions -f com.soundcloud.android patch*.rvp)
+
+echo "$output"
 
 # Loại bỏ 2 dòng đầu tiên, loại bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
 versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
