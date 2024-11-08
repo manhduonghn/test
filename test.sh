@@ -23,49 +23,25 @@ download_resources() {
 
 download_resources
 
-#!/bin/bash
-
-# Định nghĩa hàm để tìm phiên bản cao nhất của một package
 find_max_version() {
     package_name=$1
-
-    # Chạy lệnh và lưu kết quả vào biến
     output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
-
-    # Kiểm tra nếu output không có kết quả hoặc có lỗi
-    if [[ -z "$output" ]]; then
-        echo ""
-        return
-    fi
-
-    # Loại bỏ 2 dòng đầu tiên, bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
     versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
 
-    # Kiểm tra nếu không có phiên bản nào hoặc nếu danh sách có chứa 'Any'
     if [[ -z "$versions" || $(echo "$versions" | grep -w "Any") ]]; then
         echo ""
         return
     fi
-
-    # Hàm so sánh hai phiên bản và trả về phiên bản cao nhất
     compare_versions() {
         printf "%s\n%s" "$1" "$2" | sort -V | tail -n 1
     }
-
-    # Khởi tạo phiên bản cao nhất là phần tử đầu tiên
     max_version=$(echo "$versions" | head -n 1)
-
-    # Lặp qua các phiên bản còn lại và tìm phiên bản cao nhất
     while read -r version; do
         max_version=$(compare_versions "$max_version" "$version")
     done <<< "$versions"
-
-    # Trả về phiên bản cao nhất
+    
     echo "$max_version"
 }
 
-# Gọi hàm với package cần tìm và gán kết quả vào biến
 version=$(find_max_version "com.soundcloud.android")
-
-# In ra kết quả để kiểm tra
 echo "$version"
