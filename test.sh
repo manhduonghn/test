@@ -24,7 +24,7 @@ download_resources() {
 download_resources
 
 # Chạy lệnh và lưu kết quả vào biến (thay thế bằng đầu ra thực tế của lệnh)
-output=$(java -jar revanced-cli*.jar list-versions -f com.google.android.apps.youtube.music patch*.rvp)
+output=$(java -jar revanced-cli*.jar list-versions -f com.facebook.orca patch*.rvp)
 
 echo "$output"
 
