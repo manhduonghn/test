@@ -32,6 +32,6 @@ find_max_version() {
 
 download_resources
 
-version=$(find_max_version "com.reddit.frontpage")
+version=$(find_max_version "com.facebook.orca")
 
 echo "$version"
