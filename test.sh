@@ -23,6 +23,8 @@ download_resources() {
 
 download_resources
 
+#!/bin/bash
+
 # Định nghĩa hàm để tìm phiên bản cao nhất của một package
 find_max_version() {
     package_name=$1
@@ -32,7 +34,7 @@ find_max_version() {
 
     # Kiểm tra nếu output không có kết quả hoặc có lỗi
     if [[ -z "$output" ]]; then
-        echo "None"
+        echo ""
         return
     fi
 
@@ -41,7 +43,7 @@ find_max_version() {
 
     # Kiểm tra nếu không có phiên bản nào hoặc phiên bản là 'Any'
     if [[ -z "$versions" || "$versions" == "Any" ]]; then
-        echo "None"
+        echo ""
         return
     fi
 
