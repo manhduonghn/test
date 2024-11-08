@@ -41,8 +41,8 @@ find_max_version() {
     # Loại bỏ 2 dòng đầu tiên, bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
     versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
 
-    # Kiểm tra nếu không có phiên bản nào hoặc phiên bản là 'Any'
-    if [[ -z "$versions" || "$versions" == "Any" ]]; then
+    # Kiểm tra nếu không có phiên bản nào hoặc nếu danh sách có chứa 'Any'
+    if [[ -z "$versions" || $(echo "$versions" | grep -w "Any") ]]; then
         echo ""
         return
     fi
@@ -67,4 +67,5 @@ find_max_version() {
 # Gọi hàm với package cần tìm và gán kết quả vào biến
 version=$(find_max_version "com.soundcloud.android")
 
-echo $version
+# In ra kết quả để kiểm tra
+echo "$version"
