@@ -27,7 +27,8 @@ download_resources
 output=$(java -jar revanced-cli*.jar list-versions -f com.google.android.youtube patch*.rvp)
 
 # Trích xuất các phiên bản từ kết quả của lệnh
-versions=$(echo "$output" | grep -oP '\d+(\.\d+)*([.-][a-zA-Z0-9]+)*')
+versions=$(echo "$output" | grep -oP '^\s*\d+(\.\d+)+')
+
 # Hàm so sánh hai phiên bản và trả về phiên bản cao nhất
 compare_versions() {
     printf "%s\n%s" "$1" "$2" | sort -V | tail -n 1
