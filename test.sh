@@ -25,6 +25,7 @@ find_max_version() {
     package_name=$1
     output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
     version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | head -n 1)
+    echo "$version"
 }
 
 # Main
