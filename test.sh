@@ -22,4 +22,4 @@ download_resources() {
 
 download_resources
 
-java -jar revanced-cli*.jar list-versions
+java -jar revanced-cli*.jar list-versions -f com.google.android.youtube
