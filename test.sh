@@ -23,25 +23,43 @@ download_resources() {
 
 download_resources
 
-# Chạy lệnh và lưu kết quả vào biến (thay thế bằng đầu ra thực tế của lệnh)
-output=$(java -jar revanced-cli*.jar list-versions -f com.facebook.orca patch*.rvp)
+# Định nghĩa hàm để tìm phiên bản cao nhất của một package
+find_max_version() {
+    package_name=$1
 
-echo "$output"
+    # Chạy lệnh và lưu kết quả vào biến
+    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
 
-# Loại bỏ 2 dòng đầu tiên, loại bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
-versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
+    # Kiểm tra nếu output không có kết quả hoặc có lỗi
+    if [[ -z "$output" ]]; then
+        echo "Không có thông tin cho package: $package_name"
+        return
+    fi
 
-# Hàm so sánh hai phiên bản và trả về phiên bản cao nhất
-compare_versions() {
-    printf "%s\n%s" "$1" "$2" | sort -V | tail -n 1
+    # Loại bỏ 2 dòng đầu tiên, bỏ văn bản trong ngoặc `()`, và chỉ giữ lại phiên bản
+    versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
+
+    # Kiểm tra nếu không có phiên bản nào hoặc phiên bản là 'Any'
+    if [[ -z "$versions" || "$versions" == "Any" ]]; then
+        echo "Phiên bản cao nhất là: None"
+        return
+    fi
+
+    # Hàm so sánh hai phiên bản và trả về phiên bản cao nhất
+    compare_versions() {
+        printf "%s\n%s" "$1" "$2" | sort -V | tail -n 1
+    }
+
+    # Khởi tạo phiên bản cao nhất là phần tử đầu tiên
+    max_version=$(echo "$versions" | head -n 1)
+
+    # Lặp qua các phiên bản còn lại và tìm phiên bản cao nhất
+    while read -r version; do
+        max_version=$(compare_versions "$max_version" "$version")
+    done <<< "$versions"
+
+    echo "Phiên bản cao nhất là: $max_version"
 }
 
-# Khởi tạo phiên bản cao nhất là phần tử đầu tiên
-max_version=$(echo "$versions" | head -n 1)
-
-# Lặp qua các phiên bản còn lại và tìm phiên bản cao nhất
-while read -r version; do
-    max_version=$(compare_versions "$max_version" "$version")
-done <<< "$versions"
-
-echo "Phiên bản cao nhất là: $max_version"
+# Gọi hàm với package cần tìm
+find_max_version "com.google.android.youtube"
