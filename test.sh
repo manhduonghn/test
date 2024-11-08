@@ -24,12 +24,7 @@ download_resources() {
 find_max_version() {
     package_name=$1
     output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
-    versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//')
-
-    if [[ -z "$versions" || $(echo "$versions" | grep -w "Any") ]]; then
-        echo ""
-        return
-    fi
+    versions=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any")
 
     max_version=$(echo "$versions" | sort -V | tail -n 1)
     echo "$max_version"
