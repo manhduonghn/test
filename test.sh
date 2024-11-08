@@ -13,7 +13,7 @@ download_resources() {
     for repo in revanced-patches revanced-cli; do
         githubApiUrl="https://api.github.com/repos/revanced/$repo/releases"
         page=$(req - 2>/dev/null "$githubApiUrl")
-        assetUrls=$(echo "$page" | jq -r '.[] | select(.prerelease == true) | .assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
+        assetUrls=$(echo "$page" | jq -r '[.[] | select(.prerelease == true)] | sort_by(.created_at) | last | .assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
         while read -r downloadUrl assetName; do
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
