@@ -1,1 +1,2 @@
 - Disable auto captions
++ Export all activities
