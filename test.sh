@@ -101,3 +101,4 @@ uptodown() {
 
 # Example usage
 uptodown "youtube"
+uptodown "youtube-music"
