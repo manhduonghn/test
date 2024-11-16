@@ -10,13 +10,8 @@ req() {
 }
 
 url="https://youtube.en.uptodown.com/android/versions"
-
-# Lấy nội dung HTML từ URL và trích xuất giá trị của `data-code`
 data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
-
 url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/1"
 url=$(req - $url | jq -r '.data[] | select(.version == "19.44.37") | .versionURL')
-
-url=$(req - $url | grep -oP '(?<=data-url=")[^"]+')
-
-echo $url
+url="https://dw.uptodown.com/dwn$(req - $url | grep -oP '(?<=data-url=")[^"]+')"
+req youtube-v19.44.37.apk $url
