@@ -9,9 +9,48 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
+target_version="19.44.37"
 url="https://youtube.en.uptodown.com/android/versions"
 data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
-url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/1"
-url=$(req - $url | jq -r '.data[] | select(.version == "19.44.37") | .versionURL')
-url="https://dw.uptodown.com/dwn/$(req - $url | grep -oP '(?<=data-url=")[^"]+')"
-req youtube-v19.44.37 $url
+
+found=0
+page=1
+
+while [ $found -eq 0 ]; do
+    echo "Checking page $page..."
+    url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/$page"
+    json=$(req - "$url" | jq -r '.data')
+    
+    # Check if we have valid JSON data
+    if [ -z "$json" ]; then
+        echo "No more pages to check or invalid JSON response."
+        break
+    fi
+
+    # Look for the target version
+    version_url=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.version == $version) | .versionURL')
+
+    if [ -n "$version_url" ]; then
+        echo "Found versionURL: $version_url"
+        url="https://dw.uptodown.com/dwn/$(req - $version_url | grep -oP '(?<=data-url=")[^"]+')"
+        req youtube-v$target_version $url
+        found=1
+        break
+    fi
+
+    # Check if all versions on this page are less than target_version
+    all_lower=$(echo "$json" | jq -r --arg version "$target_version" '.[] | .version | select(. < $version)' | wc -l)
+    total_versions=$(echo "$json" | jq -r '.[] | .version' | wc -l)
+
+    if [ "$all_lower" -eq "$total_versions" ]; then
+        echo "All versions on page $page are less than $target_version. Stopping search."
+        break
+    fi
+
+    # Increment page number to check the next page
+    page=$((page + 1))
+done
+
+if [ $found -eq 0 ]; then
+    echo "Version $target_version not found."
+fi
