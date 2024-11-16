@@ -9,7 +9,7 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-target_version="19.17.41"
+target_version="19.17.42"
 url="https://youtube.en.uptodown.com/android/versions"
 data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
 
