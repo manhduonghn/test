@@ -11,5 +11,5 @@ req() {
 
 url="https://youtube.en.uptodown.com/android/versions"
 
-text =$(req - $url | grep 'detail-app-name')
-echo $text
+t = $(req - $url | grep 'detail-app-name')
+echo $t
