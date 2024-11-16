@@ -12,7 +12,4 @@ req() {
 url="https://youtube.en.uptodown.com/android/versions"
 
 # Lấy nội dung HTML từ URL và trích xuất giá trị của `data-code`
-data_code=$(req - "$url" | grep -oP '(?<=data-code=")[^"]+')
-
-# Hiển thị giá trị của `data-code`
-echo "$data_code"
+data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
