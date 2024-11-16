@@ -13,15 +13,20 @@ req() {
 }
 
 # Function to download a specific APK version
-download_apk() {
-    local target_version="$1"
-    local base_url="https://youtube.en.uptodown.com/android/versions"
-    local data_code
-    local found=0
-    local page=1
+uptodown() {
+    config_file="./apps/uptodown/$1.json"
+    name=$(jq -r '.name' "$config_file")
+    package=$(jq -r '.package' "$config_file")
+    version=$(jq -r '.version' "$config_file")
+    version="${version:-$(get_supported_version "$package")}"
+    url="https://$name.en.uptodown.com/android/versions"
+    version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
 
+    local page=1
+    local found=0
+    local data_code
     # Fetch the data_code
-    data_code=$(req - "$base_url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
+    data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
     if [ -z "$data_code" ]; then
         echo "Failed to retrieve data code. Exiting."
         return 1
@@ -41,15 +46,15 @@ download_apk() {
 
         # Look for the target version
         local version_url
-        version_url=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL')
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL')
 
         if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
             local download_url
             download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
             if [ -n "$download_url" ]; then
-                req "youtube-v$target_version.apk" "https://dw.uptodown.com/dwn/$download_url"
-                echo "Downloaded version $target_version successfully."
+                req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
+                echo "Downloaded version $version successfully."
                 found=1
             else
                 echo "Failed to extract download URL."
@@ -60,11 +65,11 @@ download_apk() {
         # Check if all versions are less than target_version
         local all_lower
         local total_versions
-        all_lower=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
+        all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
         total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
 
         if [ "$all_lower" -eq "$total_versions" ]; then
-            echo "All APK versions on page $page are less than $target_version. Stopping search."
+            echo "All APK versions on page $page are less than $version. Stopping search."
             break
         fi
 
@@ -73,7 +78,7 @@ download_apk() {
     done
 
     if [ $found -eq 0 ]; then
-        echo "Version $target_version not found or no suitable APK available."
+        echo "Version $version not found or no suitable APK available."
         return 1
     fi
 
@@ -81,4 +86,4 @@ download_apk() {
 }
 
 # Example usage
-download_apk "19.17.41"
+uptodown "youtube"
