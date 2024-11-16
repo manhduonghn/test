@@ -60,12 +60,12 @@ uptodown() {
 
         # Look for the target version
         local version_url
-        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL')
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL' | head -n 1)
 
         if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
             local download_url
-            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+' | head -n 1)
+            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
             if [ -n "$download_url" ]; then
                 req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
                 echo "Downloaded version $version successfully."
