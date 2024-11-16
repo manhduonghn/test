@@ -9,7 +9,7 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-target_version="19.17.41"
+target_version="19.33.35"
 url="https://youtube.en.uptodown.com/android/versions"
 data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
 
@@ -20,15 +20,15 @@ while [ $found -eq 0 ]; do
     echo "Checking page $page..."
     url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/$page"
     json=$(req - "$url" | jq -r '.data')
-    
+
     # Check if we have valid JSON data
     if [ -z "$json" ]; then
         echo "No more pages to check or invalid JSON response."
         break
     fi
 
-    # Look for the target version
-    version_url=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.version == $version) | .versionURL')
+    # Look for the target version with kindFile "apk"
+    version_url=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL')
 
     if [ -n "$version_url" ]; then
         echo "Found versionURL: $version_url"
@@ -39,11 +39,11 @@ while [ $found -eq 0 ]; do
     fi
 
     # Check if all versions on this page are less than target_version
-    all_lower=$(echo "$json" | jq -r --arg version "$target_version" '.[] | .version | select(. < $version)' | wc -l)
-    total_versions=$(echo "$json" | jq -r '.[] | .version' | wc -l)
+    all_lower=$(echo "$json" | jq -r --arg version "$target_version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
+    total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
 
     if [ "$all_lower" -eq "$total_versions" ]; then
-        echo "All versions on page $page are less than $target_version. Stopping search."
+        echo "All APK versions on page $page are less than $target_version. Stopping search."
         break
     fi
 
@@ -52,5 +52,5 @@ while [ $found -eq 0 ]; do
 done
 
 if [ $found -eq 0 ]; then
-    echo "Version $target_version not found."
+    echo "Version $target_version not found or no suitable APK found."
 fi
