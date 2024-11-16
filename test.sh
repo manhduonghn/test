@@ -65,7 +65,7 @@ uptodown() {
         if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
             local download_url
-            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
+            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+' | head -n 1)
             if [ -n "$download_url" ]; then
                 req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
                 echo "Downloaded version $version successfully."
