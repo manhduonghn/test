@@ -12,6 +12,20 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
+# Find max version
+max() {
+	local max=0
+	while read -r v || [ -n "$v" ]; do
+		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
+	done
+	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
+}
+
+# Get largest version (Just compatible with my way of getting versions code)
+get_latest_version() {
+    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
+}
+
 # Function to download a specific APK version
 uptodown() {
     config_file="./apps/uptodown/$1.json"
@@ -34,7 +48,7 @@ uptodown() {
 
     while [ $found -eq 0 ]; do
         echo "Checking page $page..."
-        local url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/$page"
+        local url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
         local json
         json=$(req - "$url" | jq -r '.data')
 
