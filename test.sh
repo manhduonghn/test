@@ -49,6 +49,8 @@ page_content=$(req -s "$url")
 
 # Lọc nội dung lần 1: theo `$dpi`
 filtered_dpi=$(echo "$page_content" | filter_lines '<a class="accent_color"' ">\s*${dpi}\s*<")
+echo "$filtered_dpi"
+exit
 
 # Lọc nội dung lần 2: theo `$arch`
 filtered_arch=$(echo "$filtered_dpi" | filter_lines '<a class="accent_color"' ">\s*${arch}\s*<")
