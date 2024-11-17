@@ -9,7 +9,7 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O "$@"
+         --keep-session-cookies --timeout=30 -q -O - "$@"
 }
 
 filter_lines() {
@@ -41,22 +41,32 @@ filter_lines() {
 
 # URL để tải trang
 url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-53-release/"
-dpi="nodpi"   # Thay bằng giá trị thực tế của bạn
-arch="arm64-v8a" # Thay bằng giá trị thực tế của bạn
+dpi="nodpi"          # Thay bằng giá trị thực tế
+arch="arm64-v8a"     # Thay bằng giá trị thực tế
 
 # Lấy nội dung trang
-page_content=$(req - "$url")
+page_content=$(req "$url")
 
 # Lọc nội dung lần 1: theo `$dpi`
 filtered_dpi=$(echo "$page_content" | filter_lines '<a class="accent_color"' ">\s*${dpi}\s*<")
-echo "$filtered_dpi"
-exit
+if [[ -z $filtered_dpi ]]; then
+    echo "Không tìm thấy nội dung phù hợp với DPI: $dpi"
+    exit 1
+fi
 
 # Lọc nội dung lần 2: theo `$arch`
 filtered_arch=$(echo "$filtered_dpi" | filter_lines '<a class="accent_color"' ">\s*${arch}\s*<")
+if [[ -z $filtered_arch ]]; then
+    echo "Không tìm thấy nội dung phù hợp với Architecture: $arch"
+    exit 1
+fi
 
 # Lọc nội dung lần 3: theo `APK`
 filtered_apk=$(echo "$filtered_arch" | filter_lines '<a class="accent_color"' "APK")
+if [[ -z $filtered_apk ]]; then
+    echo "Không tìm thấy nội dung phù hợp với APK"
+    exit 1
+fi
 
 # Tìm URL tải xuống
 apk_url=$(echo "$filtered_apk" | grep -oP 'href="\K(.*apk-[^"]*)' | head -n 1)
