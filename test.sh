@@ -50,8 +50,8 @@ uptodown() {
         echo "Checking page $page..."
         local url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
         local json
-        json=$(req - "$url" | jq -r '.data')
-
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.data[] | select(.version == $version and .kindFile == "apk") | .versionURL | first')
+	
         # Check if valid JSON response is present
         if [ -z "$json" ]; then
             echo "No more pages to check or invalid JSON response."
