@@ -36,7 +36,7 @@ get_supported_version() {
 
 # Download necessary resources to patch from Github latest release 
 download_resources() {
-    for repo in revanced-patches revanced-cli ; do
+    for repo in revanced-patches ; do
         githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
         page=$(req - 2>/dev/null $githubApiUrl)
         assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
@@ -44,7 +44,7 @@ download_resources() {
             req "$assetName" "$downloadUrl" 
         done <<< "$assetUrls"
     done
-}l
+}
 
 # Function to download a specific APK version
 uptodown() {
