@@ -46,7 +46,7 @@ url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-5
 dpi="nodpi"
 
 # Lấy nội dung trang
-page_content=$(req "$url")
+page_content=$(req - "$url")
 
 # Lọc nội dung từ `</a class="accent_color"` đến `>nodpi<`
 filtered_content=$(echo "$page_content" | filter_lines)
