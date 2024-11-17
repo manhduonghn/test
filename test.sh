@@ -60,8 +60,9 @@ uptodown() {
 
         # Look for the target version
         local version_url
-        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | if type == "array" then .versionURL[0] else .versionURL end')
-        if [ -n "$version_url" ]; then
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.data[] | select(.version == $version and .kindFile == "apk") | .[0].versionURL')
+	
+	if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
             local download_url
             download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
