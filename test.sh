@@ -13,9 +13,9 @@ req() {
 }
 
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
-url=$(req - $url | perl -ne 'push @buffer, $_; if (/>\s*nodpi\s*</) { print @buffer[-16..-1]; @buffer = (); }') # \
-                # | perl -ne 'push @buffer, $_; if (/>\s*arm64v8a\s*</) { print @buffer[-14..-1]; @buffer = (); }' \
-               #  | perl -ne 'push @buffer, $_; if (/>\s*APK\s*</) { print @buffer[-6..-1]; @buffer = (); }' \
-                # | perl -ne 'print "https://www.apkmirror.com$1\n" if /.*href="(.*apk-[^"]*)".*/ && ++$i == 1;')
+url=$(req - $url | perl -ne 'push @buffer, $_; if (/>\s*nodpi\s*</) { print @buffer[-16..-1]; @buffer = (); }' \
+                 | perl -ne 'push @buffer, $_; if (/>\s*arm64v8a\s*</) { print @buffer[-14..-1]; @buffer = (); }' \
+                 | perl -ne 'push @buffer, $_; if (/>\s*APK\s*</) { print @buffer[-6..-1]; @buffer = (); }' \
+                 | perl -ne 'print "https://www.apkmirror.com$1\n" if /.*href="(.*apk-[^"]*)".*/ && ++$i == 1;')
 
 echo "$url"
