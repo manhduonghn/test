@@ -13,5 +13,5 @@ req() {
 }
 
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
-url=$(req - $url | grep 'class="accent_color" href="' A12)
+url=$(req - $url | grep 'class="accent_color" href="' -A 12)
 echo "$url"
