@@ -56,49 +56,28 @@ uptodown() {
     url="https://$name.en.uptodown.com/android/versions"
     version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
 
-    local page=1
-    local found=0
-    local data_code
-    # Fetch the data_code
+    # Fetch data_code
     data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
 
-    while [ $found -eq 0 ]; do
-        local url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
-        local json
-        json=$(req - "$url" | jq -r '.data')
-
-        # Check if valid JSON response is present
-        if [ -z "$json" ]; then
-            echo "No more pages to check or invalid JSON response."
-            break
-        fi
-
-        # Look for the target version
-        local version_url
+    page=1
+    while :; do
+        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
+        
+        # Exit if no valid JSON or no more pages
+        [ -z "$json" ] && break
+        
+        # Search for version URL
         version_url=$(echo "$json" | jq -r --arg version "$version" 'map(select(.version == $version and .kindFile == "apk")) | .[0] | .versionURL')
-	
         if [ -n "$version_url" ]; then
-            echo "Found versionURL: $version_url"
-            local download_url
             download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
-            if [ -n "$download_url" ]; then
-                req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
-                found=1
-            fi
-            break
+            [ -n "$download_url" ] && req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
         fi
-
-        # Check if all versions are less than target_version
-        local all_lower
-        local total_versions
+        
+        # Check if all versions are less than target version
         all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
         total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
+        [ "$all_lower" -eq "$total_versions" ] && break
 
-        if [ "$all_lower" -eq "$total_versions" ]; then
-            break
-        fi
-
-        # Increment page number
         page=$((page + 1))
     done
 }
