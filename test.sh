@@ -49,7 +49,7 @@ dpi="nodpi"
 page_content=$(req - "$url")
 
 # Lọc nội dung từ `</a class="accent_color"` đến `>nodpi<`
-filtered_content=$(echo "$page_content" | filter_lines)
+filtered_content=$(echo "$page_content" | grep '>nodpi<')
 
 # In kết quả
 echo "$filtered_content"
