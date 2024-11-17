@@ -12,77 +12,56 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Find max version
-max() {
-	local max=0
-	while read -r v || [ -n "$v" ]; do
-		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
-	done
-	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
-}
+filter_lines() {
+    local start_pattern="$1"
+    local end_pattern="$2"
+    local is_collecting=0
+    local result_buffer=()
 
-# Get largest version (Just compatible with my way of getting versions code)
-get_latest_version() {
-    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
-}
-
-# Read highest supported versions from Revanced 
-get_supported_version() {
-    package_name=$1
-    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
-    version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | max | xargs)
-    echo "$version"
-}
-
-# Download necessary resources to patch from Github latest release 
-download_resources() {
-    for repo in revanced-patches revanced-cli ; do
-        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
-        page=$(req - 2>/dev/null $githubApiUrl)
-        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
-        while read -r downloadUrl assetName; do
-            req "$assetName" "$downloadUrl" 
-        done <<< "$assetUrls"
-    done
-}
-
-# Function to download a specific APK version
-uptodown() {
-    config_file="./apps/uptodown/$1.json"
-    name=$(jq -r '.name' "$config_file")
-    package=$(jq -r '.package' "$config_file")
-    version=$(jq -r '.version' "$config_file")
-    version="${version:-$(get_supported_version "$package")}"
-    url="https://$name.en.uptodown.com/android/versions"
-    version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
-
-    # Fetch data_code
-    data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
-
-    page=1
-    while :; do
-        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
-        
-        # Exit if no valid JSON or no more pages
-        [ -z "$json" ] && break
-        
-        # Search for version URL
-        version_url=$(echo "$json" | jq -r --arg version "$version" 'map(select(.version == $version and .kindFile == "apk")) | .[0] | .versionURL')
-        if [ -n "$version_url" ]; then
-            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
-            [ -n "$download_url" ] && req "$name-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
+    while IFS= read -r line; do
+        # Bắt đầu thu thập nếu khớp `start_pattern`
+        if [[ $line =~ $start_pattern ]]; then
+            is_collecting=1
         fi
-        
-        # Check if all versions are less than target version
-        all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
-        total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
-        [ "$all_lower" -eq "$total_versions" ] && break
 
-        page=$((page + 1))
+        # Thu thập các dòng
+        if [[ $is_collecting -eq 1 ]]; then
+            result_buffer+=("$line")
+        fi
+
+        # Dừng thu thập nếu khớp `end_pattern`
+        if [[ $line =~ $end_pattern ]]; then
+            is_collecting=0
+        fi
     done
+
+    # Xuất mảng kết quả
+    printf "%s\n" "${result_buffer[@]}"
 }
 
-# Example usage
-download_resources
-uptodown "youtube"
-uptodown "youtube-music"
+# URL để tải trang
+url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-53-release/"
+dpi="nodpi"   # Thay bằng giá trị thực tế của bạn
+arch="arm64-v8a" # Thay bằng giá trị thực tế của bạn
+
+# Lấy nội dung trang
+page_content=$(req -s "$url")
+
+# Lọc nội dung lần 1: theo `$dpi`
+filtered_dpi=$(echo "$page_content" | filter_lines '<a class="accent_color"' ">\s*${dpi}\s*<")
+
+# Lọc nội dung lần 2: theo `$arch`
+filtered_arch=$(echo "$filtered_dpi" | filter_lines '<a class="accent_color"' ">\s*${arch}\s*<")
+
+# Lọc nội dung lần 3: theo `APK`
+filtered_apk=$(echo "$filtered_arch" | filter_lines '<a class="accent_color"' "APK")
+
+# Tìm URL tải xuống
+apk_url=$(echo "$filtered_apk" | grep -oP 'href="\K(.*apk-[^"]*)' | head -n 1)
+
+# In URL đầy đủ
+if [[ -n $apk_url ]]; then
+    echo "https://www.apkmirror.com$apk_url"
+else
+    echo "Không tìm thấy URL APK!"
+fi
