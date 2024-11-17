@@ -45,7 +45,7 @@ dpi="nodpi"   # Thay bằng giá trị thực tế của bạn
 arch="arm64-v8a" # Thay bằng giá trị thực tế của bạn
 
 # Lấy nội dung trang
-page_content=$(req -s "$url")
+page_content=$(req - "$url")
 
 # Lọc nội dung lần 1: theo `$dpi`
 filtered_dpi=$(echo "$page_content" | filter_lines '<a class="accent_color"' ">\s*${dpi}\s*<")
