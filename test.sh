@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Function to send HTTP requests
+# Hàm gửi yêu cầu HTTP
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -12,70 +12,44 @@ req() {
          --keep-session-cookies --timeout=30 -q -O - "$@"
 }
 
-filter_lines() {
-    local start_pattern="$1"
-    local end_pattern="$2"
-    local is_collecting=0
-    local result_buffer=()
+filter_lines_reverse() {
+    local start_pattern="$1"  # Dòng bắt đầu: `</a class="accent_color"`
+    local end_pattern="$2"    # Dòng kết thúc: `>nodpi<`
+    local buffer=()
+    local found=0
 
-    while IFS= read -r line; do
-        # Bắt đầu thu thập nếu khớp `start_pattern`
-        if [[ $line =~ $start_pattern ]]; then
-            is_collecting=1
+    # Đọc nội dung từng dòng ngược lại (bắt đầu từ `end_pattern`)
+    tac | while IFS= read -r line; do
+        # Bắt đầu thu thập nếu khớp `end_pattern`
+        if [[ $line =~ $end_pattern ]]; then
+            found=1
         fi
 
         # Thu thập các dòng
-        if [[ $is_collecting -eq 1 ]]; then
-            result_buffer+=("$line")
+        if [[ $found -eq 1 ]]; then
+            buffer=("$line" "${buffer[@]}")
         fi
 
-        # Dừng thu thập nếu khớp `end_pattern`
-        if [[ $line =~ $end_pattern ]]; then
-            is_collecting=0
+        # Dừng thu thập khi khớp `start_pattern`
+        if [[ $line =~ $start_pattern ]]; then
+            found=0
+            break
         fi
     done
 
-    # Xuất mảng kết quả
-    printf "%s\n" "${result_buffer[@]}"
+    # Xuất nội dung đã thu thập (ngược thứ tự để trả về đúng)
+    printf "%s\n" "${buffer[@]}" | tac
 }
 
-# URL để tải trang
+# URL để tải nội dung
 url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-53-release/"
-dpi="nodpi"          # Thay bằng giá trị thực tế
-arch="arm64-v8a"     # Thay bằng giá trị thực tế
+dpi="nodpi"
 
 # Lấy nội dung trang
 page_content=$(req "$url")
 
-# Lọc nội dung lần 1: theo `$dpi`
-filtered_dpi=$(echo "$page_content" | filter_lines '<a class="accent_color"' ">\s*${dpi}\s*<")
-if [[ -z $filtered_dpi ]]; then
-    echo "Không tìm thấy nội dung phù hợp với DPI: $dpi"
-    exit 1
-fi
-echo "$filtered_dpi"
-exit
+# Lọc nội dung từ `</a class="accent_color"` đến `>nodpi<`
+filtered_content=$(echo "$page_content" | filter_lines_reverse '</a class="accent_color"' ">\s*${dpi}\s*<")
 
-# Lọc nội dung lần 2: theo `$arch`
-filtered_arch=$(echo "$filtered_dpi" | filter_lines '<a class="accent_color"' ">\s*${arch}\s*<")
-if [[ -z $filtered_arch ]]; then
-    echo "Không tìm thấy nội dung phù hợp với Architecture: $arch"
-    exit 1
-fi
-
-# Lọc nội dung lần 3: theo `APK`
-filtered_apk=$(echo "$filtered_arch" | filter_lines '<a class="accent_color"' "APK")
-if [[ -z $filtered_apk ]]; then
-    echo "Không tìm thấy nội dung phù hợp với APK"
-    exit 1
-fi
-
-# Tìm URL tải xuống
-apk_url=$(echo "$filtered_apk" | grep -oP 'href="\K(.*apk-[^"]*)' | head -n 1)
-
-# In URL đầy đủ
-if [[ -n $apk_url ]]; then
-    echo "https://www.apkmirror.com$apk_url"
-else
-    echo "Không tìm thấy URL APK!"
-fi
+# In kết quả
+echo "$filtered_content"
