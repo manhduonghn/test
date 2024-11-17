@@ -61,13 +61,8 @@ uptodown() {
     local data_code
     # Fetch the data_code
     data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
-    if [ -z "$data_code" ]; then
-        echo "Failed to retrieve data code. Exiting."
-        return 1
-    fi
 
     while [ $found -eq 0 ]; do
-        echo "Checking page $page..."
         local url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
         local json
         json=$(req - "$url" | jq -r '.data')
@@ -88,10 +83,7 @@ uptodown() {
             download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
             if [ -n "$download_url" ]; then
                 req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
-                echo "Downloaded version $version successfully."
                 found=1
-            else
-                echo "Failed to extract download URL."
             fi
             break
         fi
@@ -103,20 +95,12 @@ uptodown() {
         total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
 
         if [ "$all_lower" -eq "$total_versions" ]; then
-            echo "All APK versions on page $page are less than $version. Stopping search."
             break
         fi
 
         # Increment page number
         page=$((page + 1))
     done
-
-    if [ $found -eq 0 ]; then
-        echo "Version $version not found or no suitable APK available."
-        return 1
-    fi
-
-    return 0
 }
 
 # Example usage
