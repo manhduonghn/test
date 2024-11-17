@@ -9,7 +9,7 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv "$@"
+         --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
 filter_lines_reverse() {
