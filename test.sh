@@ -53,6 +53,8 @@ if [[ -z $filtered_dpi ]]; then
     echo "Không tìm thấy nội dung phù hợp với DPI: $dpi"
     exit 1
 fi
+echo "$filtered_dpi"
+exit
 
 # Lọc nội dung lần 2: theo `$arch`
 filtered_arch=$(echo "$filtered_dpi" | filter_lines '<a class="accent_color"' ">\s*${arch}\s*<")
