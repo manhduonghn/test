@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hàm gửi yêu cầu HTTP
+# Hàm req (không thay đổi)
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -12,32 +12,32 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-filter_lines_reverse() {
-    local start_pattern="$1"  # Dòng bắt đầu: `</a class="accent_color"`
-    local end_pattern="$2"    # Dòng kết thúc: `>nodpi<`
+# Hàm filter_lines (lấy từ `</a class="accent_color"` gần nhất tới `>nodpi<`)
+filter_lines() {
+    local start_pattern="</a class=\"accent_color\""
+    local end_pattern=">nodpi<"
     local buffer=()
     local found=0
 
-    # Đọc nội dung từng dòng ngược lại (bắt đầu từ `end_pattern`)
-    tac | while IFS= read -r line; do
-        # Bắt đầu thu thập nếu khớp `end_pattern`
+    # Duyệt qua từng dòng
+    while IFS= read -r line; do
+        # Nếu khớp với dòng chứa `end_pattern`, bật chế độ thu thập
         if [[ $line =~ $end_pattern ]]; then
             found=1
         fi
 
-        # Thu thập các dòng
+        # Nếu đang thu thập, lưu dòng vào buffer
         if [[ $found -eq 1 ]]; then
-            buffer=("$line" "${buffer[@]}")
+            buffer+=("$line")
         fi
 
-        # Dừng thu thập khi khớp `start_pattern`
-        if [[ $line =~ $start_pattern ]]; then
-            found=0
+        # Nếu gặp dòng chứa `start_pattern`, dừng thu thập
+        if [[ $found -eq 1 && $line =~ $start_pattern ]]; then
             break
         fi
     done
 
-    # Xuất nội dung đã thu thập (ngược thứ tự để trả về đúng)
+    # In các dòng đã thu thập (ngược thứ tự)
     printf "%s\n" "${buffer[@]}" | tac
 }
 
@@ -46,10 +46,10 @@ url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-5
 dpi="nodpi"
 
 # Lấy nội dung trang
-page_content=$(req - "$url" | grep '>nodpi<')
+page_content=$(req "$url")
 
 # Lọc nội dung từ `</a class="accent_color"` đến `>nodpi<`
-filtered_content=$(echo "$page_content" | filter_lines_reverse '</a class="accent_color"' ">'${dpi}'<")
+filtered_content=$(echo "$page_content" | filter_lines)
 
 # In kết quả
 echo "$filtered_content"
