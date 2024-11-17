@@ -60,7 +60,7 @@ uptodown() {
 
         # Look for the target version
         local version_url
-        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL[0]')
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL end')
 
         if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
