@@ -25,15 +25,18 @@ extract_filtered_links() {
         found_dpi = 0
         found_arch = 0
         found_type = 0
+        printed = 0
     }
 
     # Bắt đầu một khối mới khi gặp <a class="accent_color">
     /<a class="accent_color"/ {
-        if (block != "" && found_href && found_dpi && found_arch && found_type) {
-            # Nếu thỏa mãn tất cả điều kiện, in link và thoát
+        # Nếu một liên kết đã được in ra, bỏ qua các khối tiếp theo
+        if (printed) next
+        # Nếu khối trước thỏa mãn, in ra link
+        if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
             if (match(block, /href="([^"]+)"/, arr)) {
                 print arr[1]
-                exit
+                printed = 1
             }
         }
         # Reset trạng thái cho khối mới
@@ -46,7 +49,7 @@ extract_filtered_links() {
 
     # Thêm dòng mới vào block hiện tại
     {
-        if (found_href) {
+        if (found_href && !printed) {
             block = block "\n" $0
         }
     }
@@ -66,9 +69,9 @@ extract_filtered_links() {
         found_type = 1
     }
 
-    # Khi đọc xong toàn bộ file, kiểm tra lần cuối
+    # Xử lý khối cuối cùng
     END {
-        if (block != "" && found_href && found_dpi && found_arch && found_type) {
+        if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
             if (match(block, /href="([^"]+)"/, arr)) {
                 print arr[1]
             }
@@ -80,5 +83,5 @@ extract_filtered_links() {
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
 # Tải HTML từ URL và trích xuất liên kết hợp lệ
-link="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
+link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
 echo "$link"
