@@ -61,7 +61,7 @@ uptodown() {
 
     page=1
     while :; do
-        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
+        json=$(req - 2>/dev/null "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
         
         # Exit if no valid JSON or no more pages
         [ -z "$json" ] && break
