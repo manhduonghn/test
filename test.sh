@@ -120,6 +120,6 @@ uptodown() {
 }
 
 # Example usage
-download_resources
+#download_resources
 uptodown "youtube"
 uptodown "youtube-music"
