@@ -56,3 +56,6 @@ uptodown() {
         echo "Version $version not found or no suitable APK found."
     fi
 }
+
+
+uptodown
