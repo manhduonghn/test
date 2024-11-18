@@ -60,14 +60,25 @@ get_apkmirror_version() {
     grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+' | sed 20q | awk '{print $NF}'
 }
 
-# URL cần tải
-url="https://www.apkmirror.com/uploads/?appcategory=twitter"
-version="${version:-$(req - $url | get_apkmirror_version | get_latest_version)}"
-echo $version
-exit
-url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-${version//./-}-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
-url="https://www.apkmirror.com$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')"
-url="https://www.apkmirror.com$(req - "$url" | grep -oP 'id="download-link"[^>]*href="\K[^"]+')"
+apkmirror() {
+    config_file="./apps/apkmirror/$1.json"
+    org=$(jq -r '.org' "$config_file")
+    name=$(jq -r '.name' "$config_file")
+    type=$(jq -r '.type' "$config_file")
+    arch=$(jq -r '.arch' "$config_file")
+    dpi=$(jq -r '.dpi' "$config_file")
+    package=$(jq -r '.package' "$config_file")
+    version=$(jq -r '.version' "$config_file")
 
-req YouTube-Music-v$version.apk $url
+    version="${version:-$(get_supported_version "$package")}"
+    url="https://www.apkmirror.com/uploads/?appcategory=$name"
+    version="${version:-$(req - $url | get_apkmirror_version | get_latest_version)}"
+    url="https://www.apkmirror.com/apk/$org/$name/$name-${version//./-}-release"
+    url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "$dpi" "$arch" "$type")"
+    url="https://www.apkmirror.com$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')"
+    url="https://www.apkmirror.com$(req - "$url" | grep -oP 'id="download-link"[^>]*href="\K[^"]+')"
+    req $name-v$version.apk $url
+}
+
+apkmirror "youtube"
+apkmirror "youtube-music"
