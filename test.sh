@@ -41,10 +41,31 @@ extract_filtered_links() {
     '
 }
 
+# Find max version
+max() {
+	local max=0
+	while read -r v || [ -n "$v" ]; do
+		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
+	done
+	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
+}
+
+# Get largest version (Just compatible with my way of getting versions code)
+get_latest_version() {
+    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
+}
+
+
+get_apkmirror_version() {
+    grep 'fontBlack' | sed -n 's/.*>\(.*\)<\/a> <\/h5>.*/\1/p' | sed 20q
+}
+
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-7-27-53-release/"
+url="https://www.apkmirror.com/uploads/?appcategory=youtube-music"
+version="${version:-$(req - $url | get_apkmirror_version | get_latest_version)}"
+url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-${version//./-}-release/"
 url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 url="https://www.apkmirror.com$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')"
 url="https://www.apkmirror.com$(req - "$url" | grep -oP 'id="download-link"[^>]*href="\K[^"]+')"
 
-req YouTube-Music.apk $url
+req YouTube-Music-v$version.apk $url
