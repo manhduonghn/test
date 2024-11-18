@@ -28,10 +28,10 @@ extract_filtered_links() {
         }
     }
 
-    # Kiểm tra điều kiện "dpi"
+    # Kiểm tra điều kiện "dpi" (có thể bỏ qua nếu không yêu cầu)
     dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
 
-    # Kiểm tra điều kiện "arch"
+    # Kiểm tra điều kiện "arch" chính xác: chỉ chấp nhận "arm64-v8a"
     arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
 
     # Kiểm tra điều kiện "type"
