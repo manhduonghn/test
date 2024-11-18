@@ -54,6 +54,7 @@ uptodown() {
     version=$(jq -r '.version' "$config_file")
     version="${version:-$(get_supported_version "$package")}"
     url="https://$name.en.uptodown.com/android/versions"
+    echo "$version"
     version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
 
     local page=1
