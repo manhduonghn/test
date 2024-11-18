@@ -10,8 +10,13 @@ req() {
 }
 
 uptodown() {
-    version="19.17.41"
-    url="https://youtube.en.uptodown.com/android/versions"
+    config_file="./apps/uptodown/$1.json"
+    name=$(jq -r '.name' "$config_file")
+    package=$(jq -r '.package' "$config_file")
+    version=$(jq -r '.version' "$config_file")
+    version="${version:-$(get_supported_version "$package")}"
+    url="https://$name.en.uptodown.com/android/versions"
+    version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
     data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
 
     found=0
@@ -19,7 +24,7 @@ uptodown() {
 
     while [ $found -eq 0 ]; do
         echo "Checking page $page..."
-        url="https://youtube.en.uptodown.com/android/apps/$data_code/versions/$page"
+        url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
         json=$(req - "$url" | jq -r '.data')
 
         # Check if we have valid JSON data
@@ -58,4 +63,4 @@ uptodown() {
 }
 
 
-uptodown
+uptodown "youtube"
