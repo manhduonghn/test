@@ -67,8 +67,8 @@ uptodown() {
         [ -z "$json" ] && break
         
         # Search for version URL
-        version_url=$(echo "$json" | jq -r --arg version "$version" '[.[] | select(.version == $version and .kindFile == "apk")][0].versionURL')
-	if [ -n "$version_url" ] && [ "$version_url" != "null" ]; then
+        version_url=$(echo "$json" | jq -r --arg version "$version" '[.[] | select(.version == $version and .kindFile == "apk")][0].versionURL // empty')
+        if [ -n "$version_url" ]; then
             download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
             [ -n "$download_url" ] && req "$name-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
         fi
