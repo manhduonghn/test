@@ -61,7 +61,7 @@ get_apkmirror_version() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/uploads/?appcategory=youtube-music"
+url="https://www.apkmirror.com/uploads/?appcategory=twitter"
 version="$(req - $url | grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+'))"
 echo "$version"
 exit
