@@ -62,7 +62,7 @@ get_apkmirror_version() {
 
 # URL cần tải
 url="https://www.apkmirror.com/uploads/?appcategory=twitter"
-version="$(req - $url | grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+' | sed 20q | grep -Evi 'alpha|beta' | awk '{print $NF}')"
+version="$(req - $url | grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+' | sed 20q | grep -Evi 'alpha|beta' | awk '{print $NF}' | max)"
 echo "$version"
 exit
 url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-${version//./-}-release/"
