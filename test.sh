@@ -14,41 +14,36 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    # Truyền các điều kiện vào thông qua các tham số
     dpi=$1
     arch=$2
     type=$3
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
-    
+
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
-    
-    # Kiểm tra điều kiện "dpi", "arch", "type"
+
+    # Kiểm tra điều kiện "dpi"
     dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+
+    # Kiểm tra điều kiện "arch"
     arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
+
+    # Kiểm tra điều kiện "type"
     type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
-    
-    # Nếu điều kiện không thỏa mãn, reset và tiếp tục tìm
-    !(dpi_found && arch_found && type_found) {
+
+    # Khi các điều kiện thỏa mãn, in link và reset để tiếp tục tìm link tiếp theo
+    dpi_found && arch_found && type_found {
+        print link
         dpi_found = 0
         arch_found = 0
         type_found = 0
     }
-    
-    # Khi các điều kiện thỏa mãn và chưa in link, in ra và tiếp tục tìm link tiếp theo
-    dpi_found && arch_found && type_found && !printed {
-        print link
-        printed = 1
-    }
-    
-    # Sau khi in một link hợp lệ, reset để tiếp tục tìm link tiếp theo
-    printed == 1 { dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
     '
 }
 
