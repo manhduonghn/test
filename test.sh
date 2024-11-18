@@ -15,26 +15,26 @@ req() {
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
     # Truyền các điều kiện vào thông qua các tham số
-    pattern1=$1
-    pattern2=$2
-    pattern3=$3
+    dpi=$1
+    arch=$2
+    type=$3
 
-    awk -v pattern1="$pattern1" -v pattern2="$pattern2" -v pattern3="$pattern3" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0; printed = 0 }
+    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
-    # Kiểm tra điều kiện 1
-    pattern1 && $0 ~ ("table-cell.*" pattern1) { dpi_found = 1 }
-    # Kiểm tra điều kiện 2
-    pattern2 && $0 ~ ("table-cell.*" pattern2) { arch_found = 1 }
-    # Kiểm tra điều kiện 3
-    pattern3 && $0 ~ ("<span class=\"apkm-badge\">" pattern3) { bundle_found = 1 }
+    # Kiểm tra điều kiện "dpi"
+    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+    # Kiểm tra điều kiện "arch"
+    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
+    # Kiểm tra điều kiện "type"
+    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
-    dpi_found && arch_found && bundle_found && !printed {
+    dpi_found && arch_found && type_found && !printed {
         print link
         printed = 1
     }
