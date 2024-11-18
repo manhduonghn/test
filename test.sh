@@ -18,33 +18,36 @@ extract_filtered_links() {
     arch=$2
     type=$3
 
-    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0; }
-
     # Tìm thẻ <a class="accent_color"> chứa link
+    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
+    # Tìm thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
-
-    # Tìm các phần tử liên quan đến arch, dpi và type trong cùng một hàng
+    
+    # Tìm thông tin các cột liên quan đến arch, dpi và type
     /<div class="table-cell"/ {
-        # Kiểm tra arch, dpi và type trong các cột liền kề
         if ($0 ~ arch) arch_found = 1
         if ($0 ~ dpi) dpi_found = 1
+    }
+    
+    # Tìm type từ thẻ <span class="apkm-badge">
+    /<span class="apkm-badge"/ {
         if ($0 ~ type) type_found = 1
     }
 
-    # Khi tất cả các điều kiện đều thỏa mãn và chưa in link, in ra và thoát
-    link && arch_found && dpi_found && type_found && !printed {
+    # Nếu tất cả các điều kiện thỏa mãn và link đã tìm thấy, in ra
+    link && arch_found && dpi_found && type_found {
         print link
-        printed = 1
+        exit 0
     }
     '
 }
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
+# Gọi hàm req và sau đó trích xuất link
+url=$(req "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
 echo "$url"
