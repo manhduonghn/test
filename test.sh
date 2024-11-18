@@ -20,28 +20,35 @@ extract_filtered_links() {
     type=$3
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    BEGIN { 
+        link = ""; 
+        dpi_found = 0; 
+        arch_found = 0; 
+        type_found = 0; 
+        printed = 0 
+    }
     
-    # Trích xuất href khi gặp thẻ <a class="accent_color">
-    /<a class="accent_color"/ {
+    # Truy xuất các giá trị lần lượt theo từng nhóm (href, type, arch, dpi)
+    {
+        # Kiểm tra điều kiện cho href
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
-    }
-
-    # Kiểm tra điều kiện "dpi"
-    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
-
-    # Kiểm tra điều kiện "arch"
-    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
-
-    # Kiểm tra điều kiện "type"
-    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
-
-    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
-    dpi_found && arch_found && type_found && !printed {
-        print link
-        printed = 1
+        
+        # Kiểm tra điều kiện "dpi"
+        if (dpi && $0 ~ ("table-cell.*" dpi)) { dpi_found = 1 }
+        
+        # Kiểm tra điều kiện "arch"
+        if (arch && $0 ~ ("table-cell.*" arch)) { arch_found = 1 }
+        
+        # Kiểm tra điều kiện "type"
+        if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) { type_found = 1 }
+        
+        # Kiểm tra xem tất cả các điều kiện đã thỏa mãn hay chưa
+        if (dpi_found && arch_found && type_found && link != "" && !printed) {
+            print link
+            printed = 1
+        }
     }
     '
 }
@@ -50,7 +57,7 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
 
 # Tải HTML và trích xuất link thỏa mãn điều kiện
-url=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 
 # In ra URL tìm được
 echo "$url"
