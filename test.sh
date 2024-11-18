@@ -29,20 +29,19 @@ extract_filtered_links() {
         }
     }
     
-    # Kiểm tra điều kiện "dpi"
+    # Kiểm tra điều kiện "dpi", "arch", "type"
+    # Nếu các điều kiện không thỏa mãn, reset lại
     dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
-    # Kiểm tra điều kiện "arch"
     arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
-    # Kiểm tra điều kiện "type"
-    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
+    type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
     
     # Khi không đủ điều kiện thì reset các biến
-    !dpi_found || !arch_found || !type_found {
+    !(dpi_found && arch_found && type_found) {
         dpi_found = 0
         arch_found = 0
         type_found = 0
     }
-
+    
     # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
     dpi_found && arch_found && type_found && !printed {
         print link
