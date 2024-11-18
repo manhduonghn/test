@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Hàm req để tải HTML
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -12,7 +11,6 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
     dpi=$1
     arch=$2
