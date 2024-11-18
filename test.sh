@@ -19,26 +19,26 @@ extract_filtered_links() {
     type=$3
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0; dpi_arch_found = 0 }
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0; }
 
-    # Trích xuất href khi gặp thẻ <a class="accent_color">
+    # Lưu trữ href từ thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
 
-    # Kiểm tra điều kiện "dpi" và "arch" kề nhau trong cùng một nhóm các thẻ
-    # Tìm kiếm dòng chứa cả dpi và arch trong các thẻ gần nhau
-    (dpi && $0 ~ ("table-cell.*" dpi)) && (arch && $0 ~ ("table-cell.*" arch)) {
-        dpi_arch_found = 1
+    # Kiểm tra các điều kiện "dpi" và "arch" có ở gần nhau trong các thẻ liền kề
+    /table-cell/ {
+        if ($0 ~ dpi) dpi_found = 1
+        if ($0 ~ arch) arch_found = 1
     }
 
-    # Kiểm tra điều kiện "type" xuất hiện trong thẻ <span class="apkm-badge">
-    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
+    # Kiểm tra điều kiện "type" trong thẻ <span class="apkm-badge">
+    /<span class="apkm-badge"/ && $0 ~ type { type_found = 1 }
 
     # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
-    dpi_arch_found && type_found && link && !printed {
+    dpi_found && arch_found && type_found && link && !printed {
         print link
         printed = 1
     }
