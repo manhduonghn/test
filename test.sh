@@ -79,6 +79,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
-link=$(req - "$url" | extract_filtered_links "" "" "APK")
+url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
+link=$(req - "$url" | extract_filtered_links "" "" "BUNDLE")
 echo "https://www.apkmirror.com$link"
