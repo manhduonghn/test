@@ -9,6 +9,19 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
+max() {
+	local max=0
+	while read -r v || [ -n "$v" ]; do
+		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
+	done
+	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
+}
+
+# Get largest version (Just compatible with my way of getting versions code)
+get_latest_version() {
+    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
+}
+
 uptodown() {
     config_file="./apps/uptodown/$1.json"
     name=$(jq -r '.name' "$config_file")
