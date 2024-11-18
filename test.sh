@@ -19,27 +19,26 @@ extract_filtered_links() {
     type=$3
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0; dpi_arch_found = 0 }
 
-    # Lưu trữ thông tin khi gặp thẻ <a class="accent_color">
+    # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
 
-    # Kiểm tra các điều kiện về dpi, arch, và type khi gặp các dòng thẻ phù hợp
-    # Kiểm tra dpi, ví dụ: 560-640dpi
-    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+    # Kiểm tra điều kiện "dpi" và "arch" kề nhau trong cùng một nhóm các thẻ
+    # Tìm kiếm dòng chứa cả dpi và arch trong các thẻ gần nhau
+    (dpi && $0 ~ ("table-cell.*" dpi)) && (arch && $0 ~ ("table-cell.*" arch)) {
+        dpi_arch_found = 1
+    }
 
-    # Kiểm tra arch, ví dụ: arm64-v8a
-    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
-
-    # Kiểm tra type, ví dụ: APK
+    # Kiểm tra điều kiện "type" xuất hiện trong thẻ <span class="apkm-badge">
     type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
 
-    # Kiểm tra tất cả các điều kiện và in ra link nếu tất cả đều thỏa mãn
-    dpi_found && arch_found && type_found && link && !printed {
+    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    dpi_arch_found && type_found && link && !printed {
         print link
         printed = 1
     }
