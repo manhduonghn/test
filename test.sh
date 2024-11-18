@@ -62,7 +62,7 @@ get_apkmirror_version() {
 
 # URL cần tải
 url="https://www.apkmirror.com/uploads/?appcategory=youtube-music"
-version="${version:-$(req - $url | get_apkmirror_version)}"
+version="$(req - $url | grep 'fontBlack')"
 echo $version
 exit
 url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-${version//./-}-release/"
