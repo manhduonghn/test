@@ -28,18 +28,15 @@ extract_filtered_links() {
         printed = 0
     }
 
-    # Bắt đầu một khối mới khi gặp <a class="accent_color">
+    # Khi gặp <a class="accent_color", bắt đầu một khối mới
     /<a class="accent_color"/ {
-        # Nếu một liên kết đã được in ra, bỏ qua các khối tiếp theo
         if (printed) next
-        # Nếu khối trước thỏa mãn, in ra link
         if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
             if (match(block, /href="([^"]+)"/, arr)) {
                 print arr[1]
                 printed = 1
             }
         }
-        # Reset trạng thái cho khối mới
         block = $0
         found_href = 1
         found_dpi = 0
@@ -47,29 +44,29 @@ extract_filtered_links() {
         found_type = 0
     }
 
-    # Thêm dòng mới vào block hiện tại
+    # Thêm dòng vào khối hiện tại
     {
         if (found_href && !printed) {
             block = block "\n" $0
         }
     }
 
-    # Đánh dấu nếu khối hiện tại chứa thông tin dpi
+    # Đánh dấu nếu khối chứa thông tin dpi
     /<\/div>/ && $0 ~ dpi {
         found_dpi = 1
     }
 
-    # Đánh dấu nếu khối hiện tại chứa thông tin arch
+    # Đánh dấu nếu khối chứa thông tin arch
     /<\/div>/ && $0 ~ arch {
         found_arch = 1
     }
 
-    # Đánh dấu nếu khối hiện tại chứa thông tin type
+    # Đánh dấu nếu khối chứa thông tin type
     /<\/span>/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
         found_type = 1
     }
 
-    # Xử lý khối cuối cùng
+    # Xử lý khối cuối cùng khi kết thúc file
     END {
         if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
             if (match(block, /href="([^"]+)"/, arr)) {
@@ -82,6 +79,5 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-# Tải HTML từ URL và trích xuất liên kết hợp lệ
-link="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "360-480dpi" "armeabi-v7a" "APK")"
-echo "$link"
+link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
+echo "https://www.apkmirror.com$link"
