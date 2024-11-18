@@ -44,3 +44,5 @@ url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-releas
 
 # Gọi req và trích xuất thông tin
 url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links) | head -n 1"
+
+echo "$url"
