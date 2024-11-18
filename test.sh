@@ -47,7 +47,8 @@ uptodown() {
         fi
 
         # Look for the target version with kindFile "apk"
-        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL' | head -n 1)
+        #version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .versionURL' | head -n 1)
+	version_url=$(echo "$json" | jq -r --arg version "$version" 'map(select(.version == $version and .kindFile == "apk")) | .[0] | .versionURL')
 
         if [ -n "$version_url" ]; then
             echo "Found versionURL: $version_url"
