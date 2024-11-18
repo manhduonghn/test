@@ -80,5 +80,5 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
-link=$(req - "$url" | extract_filtered_links "nodpi" "" "APK")
+link=$(req - "$url" | extract_filtered_links "" "" "APK")
 echo "https://www.apkmirror.com$link"
