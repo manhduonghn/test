@@ -28,7 +28,7 @@ extract_filtered_links() {
         }
     }
 
-    # Kiểm tra các điều kiện "dpi" và "arch" có ở gần nhau trong các thẻ liền kề
+    # Kiểm tra các điều kiện "dpi" và "arch" trong các thẻ liền kề (cùng nhóm)
     /table-cell/ {
         if ($0 ~ dpi) dpi_found = 1
         if ($0 ~ arch) arch_found = 1
@@ -37,7 +37,7 @@ extract_filtered_links() {
     # Kiểm tra điều kiện "type" trong thẻ <span class="apkm-badge">
     /<span class="apkm-badge"/ && $0 ~ type { type_found = 1 }
 
-    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    # Khi tất cả các điều kiện được thỏa mãn và chưa in link, in ra và thoát
     dpi_found && arch_found && type_found && link && !printed {
         print link
         printed = 1
