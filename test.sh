@@ -35,7 +35,6 @@ extract_filtered_links() {
         arch_found = 0
         bundle_found = 0
         link = ""
-        exit
     }
     '
 }
@@ -44,6 +43,6 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links)"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
 
 echo "$url"
