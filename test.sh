@@ -28,11 +28,11 @@ extract_filtered_links() {
         }
     }
     # Kiểm tra điều kiện 1
-    pattern1 && /table-cell.*pattern1/ { dpi_found = 1 }
+    pattern1 && $0 ~ ("table-cell.*" pattern1) { dpi_found = 1 }
     # Kiểm tra điều kiện 2
-    pattern2 && /table-cell.*pattern2/ { arch_found = 1 }
+    pattern2 && $0 ~ ("table-cell.*" pattern2) { arch_found = 1 }
     # Kiểm tra điều kiện 3
-    pattern3 && /<span class="apkm-badge">pattern3/ { bundle_found = 1 }
+    pattern3 && $0 ~ ("<span class=\"apkm-badge\">" pattern3) { bundle_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
     dpi_found && arch_found && bundle_found && !printed {
         print link
