@@ -44,7 +44,5 @@ extract_filtered_links() {
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-483-0-0-62-109-release/"
 url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
-download_link=$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')
-echo "$download_link"
-#url="https://www.apkmirror.com$(req - "$url" | grep 'downloadButton')"
-#echo "$url"
+url="https://www.apkmirror.com$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')"
+echo "$url"
