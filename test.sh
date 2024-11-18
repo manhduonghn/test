@@ -19,61 +19,29 @@ extract_filtered_links() {
     arch=$2
     type=$3
 
-    # Biến lưu trạng thái các điều kiện
-    found_dpi=0
-    found_arch=0
-    found_type=0
-    link=""
-
-    # Lặp qua các dòng để xử lý các điều kiện
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN {
-        # Biến kiểm tra tình trạng điều kiện
-        found_dpi = 0
-        found_arch = 0
-        found_type = 0
-        link = ""
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    # Trích xuất href khi gặp thẻ <a class="accent_color">
+    /<a class="accent_color"/ {
+        if (match($0, /href="([^"]+)"/, arr)) {
+            link = arr[1]
+        }
     }
-
-    # Xử lý mỗi dòng HTML
-    {
-        # Kiểm tra href của thẻ <a class="accent_color">
-        if (match($0, /<a class="accent_color"[^>]*href="([^"]+)"/, arr)) {
-            link = arr[1]  # Lưu giá trị href
-        }
-
-        # Kiểm tra điều kiện dpi, arch và type
-        if (dpi && $0 ~ ("<div class=\"table-cell" && $0 ~ dpi)) {
-            found_dpi = 1
-        } else {
-            found_dpi = 0
-        }
-
-        if (arch && $0 ~ ("<div class=\"table-cell" && $0 ~ arch)) {
-            found_arch = 1
-        } else {
-            found_arch = 0
-        }
-
-        if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) {
-            found_type = 1
-        } else {
-            found_type = 0
-        }
-
-        # Nếu tất cả điều kiện thỏa mãn, in ra link
-        if (found_dpi && found_arch && found_type && link != "") {
-            print link
-        }
+    # Kiểm tra điều kiện "dpi"
+    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+    # Kiểm tra điều kiện "arch"
+    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
+    # Kiểm tra điều kiện "type"
+    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
+    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    dpi_found && arch_found && type_found && !printed {
+        print link
+        printed = 1
     }
     '
 }
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-
-# Tải HTML và trích xuất link thỏa mãn điều kiện
-url=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
-
-# In ra URL tìm được
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 echo "$url"
