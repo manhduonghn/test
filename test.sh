@@ -14,34 +14,30 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    local filters=("$@")  # Nhận các điều kiện qua tham số
-    awk -v filters="${filters[*]}" '
-    BEGIN {
-        link = ""; 
-        split(filters, conds, " ");  # Chia các điều kiện thành mảng
-        matches = 0; 
-        total_conditions = length(conds);
-    }
+    local dpi="$2"
+    local architecture="$1"
+    awk -v dpi="$dpi"
+    awk -v arch="$architecture" '
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
-            link = arr[1];
+            link = arr[1]
         }
     }
-    # Kiểm tra từng điều kiện trong mảng conds
-    {
-        for (i = 1; i <= total_conditions; i++) {
-            if ($0 ~ conds[i]) {
-                matches++;
-                break;
-            }
-        }
-    }
-    # Khi đủ số điều kiện, in link và reset
-    matches == total_conditions {
-        print link;
-        link = "";
-        matches = 0;
+    # Kiểm tra "nodpi" trong các dòng HTML
+    /table-cell/ && $0 ~ dpi { dpi_found = 1 }
+    # Kiểm tra kiến trúc phù hợp (sử dụng giá trị của arch)
+    /table-cell/ && $0 ~ arch { arch_found = 1 }
+    # Kiểm tra "APK" trong các dòng HTML
+    /<span class="apkm-badge">APK/ { bundle_found = 1 }
+    # Khi cả ba điều kiện được thỏa mãn, in link và reset
+    dpi_found && arch_found && bundle_found {
+        print link
+        dpi_found = 0
+        arch_found = 0
+        bundle_found = 0
+        link = ""
     }
     '
 }
@@ -49,7 +45,7 @@ extract_filtered_links() {
 # URL cần tải
 url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 
-# Gọi req và trích xuất thông tin với các điều kiện
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "APK" "universal" "nodpi" | sed 1q)"
+# Gọi req và trích xuất thông tin
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "arm64-v8a" "nodpi" | sed 1q)"
 
 echo "$url"
