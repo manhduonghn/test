@@ -14,7 +14,12 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    awk '
+    # Truyền các điều kiện vào thông qua các tham số
+    pattern1=$1
+    pattern2=$2
+    pattern3=$3
+
+    awk -v pattern1="$pattern1" -v pattern2="$pattern2" -v pattern3="$pattern3" '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0; printed = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
@@ -22,12 +27,12 @@ extract_filtered_links() {
             link = arr[1]
         }
     }
-    # Kiểm tra "nodpi" trong các dòng HTML
-    /table-cell.*nodpi/ { dpi_found = 1 }
-    # Kiểm tra "arm64-v8a" trong các dòng HTML
-    /table-cell.*arm64-v8a/ { arch_found = 1 }
-    # Kiểm tra "APK" trong các dòng HTML
-    /<span class="apkm-badge">APK/ { bundle_found = 1 }
+    # Kiểm tra điều kiện 1
+    pattern1 && /table-cell.*pattern1/ { dpi_found = 1 }
+    # Kiểm tra điều kiện 2
+    pattern2 && /table-cell.*pattern2/ { arch_found = 1 }
+    # Kiểm tra điều kiện 3
+    pattern3 && /<span class="apkm-badge">pattern3/ { bundle_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
     dpi_found && arch_found && bundle_found && !printed {
         print link
@@ -38,8 +43,5 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
-
-# Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links)"
-
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 echo "$url"
