@@ -83,5 +83,7 @@ uptodown() {
 }
 
 # Example usage
+download_resources
+uptodown "x"
 uptodown "youtube"
 uptodown "youtube-music"
