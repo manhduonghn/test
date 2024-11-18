@@ -9,7 +9,7 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O - "$@"
+         --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
 # Hàm trích xuất href thoả mãn điều kiện
@@ -43,4 +43,4 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-req "$url" | extract_filtered_links
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links) | head -n 1"
