@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hàm req để tải HTML
+# Hàm req để tải HTML (giữ nguyên)
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -42,7 +42,7 @@ url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 # Giá trị architecture (nếu không được truyền vào, mặc định là universal)
 architecture="${1:-universal}"
 
-# Gọi req và trích xuất thông tin trực tiếp
+# Gọi req để tải HTML vào pipeline
 result_url=$(req - "$url" | extract_filtered_links "$architecture" | sed 1q)
 
 # Kết quả cuối cùng
