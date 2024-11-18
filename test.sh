@@ -64,3 +64,4 @@ uptodown() {
 
 
 uptodown "youtube"
+uptodown "youtube-music"
