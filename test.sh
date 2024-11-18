@@ -15,7 +15,7 @@ req() {
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
     awk '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0; found = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
@@ -28,14 +28,13 @@ extract_filtered_links() {
     /table-cell.*arm64-v8a/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn, in link và reset
-    dpi_found && arch_found && bundle_found {
+    # Khi cả ba điều kiện được thỏa mãn, in link và đặt cờ found
+    dpi_found && arch_found && bundle_found && !found {
         print link
-        dpi_found = 0
-        arch_found = 0
-        bundle_found = 0
-        link = ""
+        found = 1
     }
+    # Nếu đã tìm thấy link, thoát vòng lặp
+    found { exit }
     '
 }
 
@@ -43,6 +42,6 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links)"
 
 echo "$url"
