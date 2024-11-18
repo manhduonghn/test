@@ -14,40 +14,34 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
+    # Truyền các điều kiện vào thông qua các tham số
     dpi=$1
     arch=$2
     type=$3
 
-    # Tìm thẻ <a class="accent_color"> chứa link
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    # Tìm thẻ <a class="accent_color">
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
-    
-    # Tìm thông tin các cột liên quan đến arch, dpi và type
-    /<div class="table-cell"/ {
-        if ($0 ~ arch) arch_found = 1
-        if ($0 ~ dpi) dpi_found = 1
-    }
-    
-    # Tìm type từ thẻ <span class="apkm-badge">
-    /<span class="apkm-badge"/ {
-        if ($0 ~ type) type_found = 1
-    }
-
-    # Nếu tất cả các điều kiện thỏa mãn và link đã tìm thấy, in ra
-    link && arch_found && dpi_found && type_found {
+    # Kiểm tra điều kiện "dpi"
+    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+    # Kiểm tra điều kiện "arch"
+    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
+    # Kiểm tra điều kiện "type"
+    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
+    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    dpi_found && arch_found && type_found && !printed {
         print link
-        exit 0
+        printed = 1
     }
     '
 }
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-# Gọi hàm req và sau đó trích xuất link
-url=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "armeabi-v7a" "APK")"
 echo "$url"
