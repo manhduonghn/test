@@ -55,17 +55,17 @@ extract_filtered_links() {
     }
 
     # Tìm thấy điều kiện DPI
-    /<div class="table-cell rowheight addseparator expand pad dowrap">/ && $0 ~ dpi {
+    /table-cell/ && $0 ~ dpi {
         found_dpi = 1
     }
 
     # Tìm thấy điều kiện ARCH
-    /<div class="table-cell rowheight addseparator expand pad dowrap">/ && $0 ~ arch {
+    /table-cell/ && $0 ~ arch {
         found_arch = 1
     }
 
     # Tìm thấy điều kiện TYPE
-    /<span class="apkm-badge">/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+    /apkm-badge/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
         found_type = 1
     }
 
@@ -79,6 +79,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
-link=$(req - "$url" | extract_filtered_links "" "" "APK")
+url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
+link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
 echo "https://www.apkmirror.com$link"
