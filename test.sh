@@ -44,6 +44,6 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "arm64-v8a" | sed 1q)"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "armeabi-v7a" | sed 1q)"
 
 echo "$url"
