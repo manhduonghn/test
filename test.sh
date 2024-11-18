@@ -14,65 +14,54 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    dpi=$1
-    arch=$2
-    type=$3
+    local dpi="$1"
+    local arch="$2"
+    local type="$3"
 
-    # Gom tất cả nội dung HTML thành một chuỗi
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { block = ""; link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
-    
-    # Nếu gặp thẻ <div class="table-cell rowheight addseparator">, đóng khối trước đó và bắt đầu khối mới
-    /<div class="table-cell rowheight addseparator/ {
-        if (block != "" && printed == 0) {
-            # Kiểm tra điều kiện
-            if (link != "" && dpi_found && arch_found && type_found) {
-                print link
-                printed = 1
-            }
-        }
-        # Reset block và trạng thái điều kiện
-        block = ""
-        link = ""
-        dpi_found = 0
-        arch_found = 0
-        type_found = 0
+    BEGIN {
+        # Biến để lưu đoạn HTML hiện tại và trạng thái cắt
+        current_block = ""
+        matched_dpi = ""
+        matched_arch = ""
+        matched_type = ""
     }
 
-    # Gộp tất cả các dòng thuộc cùng một khối
-    {
-        block = block $0
-    }
-
-    # Lưu liên kết từ thẻ <a class="accent_color">
+    # Bắt đầu một block mới khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
-        if (match($0, /href="([^"]+)"/, arr)) {
-            link = arr[1]
+        current_block = $0
+    }
+
+    # Thêm dòng mới vào block hiện tại
+    {
+        if (current_block != "") {
+            current_block = current_block "\n" $0
         }
     }
 
-    # Đánh dấu nếu tìm thấy điều kiện dpi
-    dpi && $0 ~ ("table-cell.*" dpi) {
-        dpi_found = 1
+    # Khi gặp dòng chứa thông tin về "dpi", đánh dấu đoạn này phù hợp với dpi
+    /table-cell/ && dpi && $0 ~ dpi {
+        matched_dpi = current_block
     }
 
-    # Đánh dấu nếu tìm thấy điều kiện arch
-    arch && $0 ~ ("table-cell.*" arch) {
-        arch_found = 1
+    # Khi gặp dòng chứa thông tin về "arch", đánh dấu đoạn phù hợp với arch (sau khi lọc qua dpi)
+    /table-cell/ && arch && $0 ~ arch && matched_dpi {
+        matched_arch = matched_dpi
+        matched_dpi = ""
     }
 
-    # Đánh dấu nếu tìm thấy điều kiện type
-    type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
-        type_found = 1
-    }
-
-    # Khi đọc xong toàn bộ HTML, kiểm tra khối cuối cùng
-    END {
-        if (block != "" && printed == 0) {
-            if (link != "" && dpi_found && arch_found && type_found) {
-                print link
-            }
+    # Khi gặp dòng chứa thông tin về "type", kiểm tra đoạn cuối cùng
+    /<span class="apkm-badge"/ && type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") && matched_arch {
+        # Trích xuất href từ đoạn khớp với tất cả các điều kiện
+        if (match(matched_arch, /href="([^"]+)"/, arr)) {
+            print arr[1]
+            exit
         }
+    }
+
+    # Kết thúc block hiện tại nếu gặp dòng mới
+    /<\/div>/ {
+        current_block = ""
     }
     '
 }
