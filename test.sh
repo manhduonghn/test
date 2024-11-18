@@ -28,14 +28,19 @@ extract_filtered_links() {
         }
     }
 
-    # Kiểm tra các điều kiện "dpi" và "arch" trong các thẻ liền kề (cùng nhóm)
+    # Giới hạn phạm vi tìm kiếm trong cùng một dòng của class "table-row" hoặc "row"
+    /<div class="table-row"/ {
+        dpi_found = 0
+        arch_found = 0
+        type_found = 0
+    }
+
+    # Kiểm tra điều kiện "dpi", "arch" và "type" trong cùng một "table-row"
     /table-cell/ {
         if ($0 ~ dpi) dpi_found = 1
         if ($0 ~ arch) arch_found = 1
+        if ($0 ~ type) type_found = 1
     }
-
-    # Kiểm tra điều kiện "type" trong thẻ <span class="apkm-badge">
-    /<span class="apkm-badge"/ && $0 ~ type { type_found = 1 }
 
     # Khi tất cả các điều kiện được thỏa mãn và chưa in link, in ra và thoát
     dpi_found && arch_found && type_found && link && !printed {
