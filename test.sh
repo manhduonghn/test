@@ -42,6 +42,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/microsoft-corporation/microsoft-edge-canary/microsoft-edge-canary-133-0-2958-0-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
+url="https://www.apkmirror.com/apk/redditinc/reddit/reddit-2024-38-0-release/"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "universal" "APK")"
 echo "$url"
