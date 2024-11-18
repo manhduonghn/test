@@ -42,6 +42,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "armeabi-v7a" "APK")"
+url="https://www.apkmirror.com/apk/microsoft-corporation/microsoft-edge-canary/microsoft-edge-canary-133-0-2958-0-release/"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "universal" "APK")"
 echo "$url"
