@@ -18,34 +18,44 @@ extract_filtered_links() {
     arch=$2
     type=$3
 
-    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    # Vòng lặp kiểm tra các link
+    while read -r line; do
+        dpi_found=0
+        arch_found=0
+        type_found=0
 
-    # Trích xuất href khi gặp thẻ <a class="accent_color">
-    /<a class="accent_color"/ {
-        if (match($0, /href="([^"]+)"/, arr)) {
-            link = arr[1]
-        }
-    }
+        # Trích xuất href từ thẻ <a class="accent_color">
+        if [[ "$line" =~ <a\ class=\"accent_color\".*href=\"([^\"]+)\" ]]; then
+            link="${BASH_REMATCH[1]}"
+        else
+            continue
+        fi
 
-    # Kiểm tra điều kiện "dpi" (có thể bỏ qua nếu không yêu cầu)
-    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
+        # Kiểm tra điều kiện dpi
+        if [[ "$line" =~ "table-cell.*$dpi" ]]; then
+            dpi_found=1
+        fi
 
-    # Kiểm tra điều kiện "arch" chính xác: chỉ chấp nhận "arm64-v8a"
-    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
+        # Kiểm tra điều kiện arch
+        if [[ "$line" =~ "table-cell.*$arch" ]]; then
+            arch_found=1
+        fi
 
-    # Kiểm tra điều kiện "type"
-    type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
+        # Kiểm tra điều kiện type
+        if [[ "$line" =~ "<span\ class=\"apkm-badge\">$type</span>" ]]; then
+            type_found=1
+        fi
 
-    # Khi tất cả điều kiện được thỏa mãn và chưa in link, in ra và dừng
-    dpi_found && arch_found && type_found && !printed {
-        print link
-        printed = 1  # Đánh dấu đã in 1 liên kết
-    }
-    '
+        # Nếu tất cả các điều kiện đều thỏa mãn, in ra và thoát
+        if [[ $dpi_found -eq 1 && $arch_found -eq 1 && $type_found -eq 1 ]]; then
+            echo "$link"
+            break
+        fi
+    done
 }
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
-echo "$url"
+# Tải HTML từ URL và trích xuất liên kết hợp lệ
+link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
+echo "$link"
