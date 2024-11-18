@@ -26,26 +26,6 @@ get_latest_version() {
     grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
 }
 
-# Read highest supported versions from Revanced 
-get_supported_version() {
-    package_name=$1
-    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
-    version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | max | xargs)
-    echo "$version"
-}
-
-# Download necessary resources to patch from Github latest release 
-download_resources() {
-    for repo in revanced-patches revanced-cli ; do
-        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
-        page=$(req - 2>/dev/null $githubApiUrl)
-        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
-        while read -r downloadUrl assetName; do
-            req "$assetName" "$downloadUrl" 
-        done <<< "$assetUrls"
-    done
-}
-
 # Function to download a specific APK version
 uptodown() {
     config_file="./apps/uptodown/$1.json"
@@ -56,33 +36,69 @@ uptodown() {
     url="https://$name.en.uptodown.com/android/versions"
     version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
 
-    # Fetch data_code
+    local page=1
+    local found=0
+    local data_code
+    # Fetch the data_code
     data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
+    if [ -z "$data_code" ]; then
+        echo "Failed to retrieve data code. Exiting."
+        return 1
+    fi
 
-    page=1
-    while :; do
-        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
-        
-        # Exit if no valid JSON or no more pages
-        [ -z "$json" ] && break
-        
-        # Search for version URL
-        version_url=$(echo "$json" | jq -r --arg version "$version" 'map(select(.version == $version and .kindFile == "apk")) | .[0] | .versionURL')
-        if [ -n "$version_url" ]; then
-            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
-            [ -n "$download_url" ] && req "$name-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
+    while [ $found -eq 0 ]; do
+        echo "Checking page $page..."
+        local url="https://$name.en.uptodown.com/android/apps/$data_code/versions/$page"
+        local json
+        json=$(req - "$url" | jq -r '.data')
+
+        # Check if valid JSON response is present
+        if [ -z "$json" ]; then
+            echo "No more pages to check or invalid JSON response."
+            break
         fi
-        
-        # Check if all versions are less than target version
+
+        # Look for the target version
+        local version_url
+        version_url=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.version == $version and .kindFile == "apk") | .[0] | .versionURL')
+
+        if [ -n "$version_url" ]; then
+            echo "Found versionURL: $version_url"
+            local download_url
+            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
+            if [ -n "$download_url" ]; then
+                req "youtube-v$version.apk" "https://dw.uptodown.com/dwn/$download_url"
+                echo "Downloaded version $version successfully."
+                found=1
+            else
+                echo "Failed to extract download URL."
+            fi
+            break
+        fi
+
+        # Check if all versions are less than target_version
+        local all_lower
+        local total_versions
         all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
         total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
-        [ "$all_lower" -eq "$total_versions" ] && break
 
+        if [ "$all_lower" -eq "$total_versions" ]; then
+            echo "All APK versions on page $page are less than $version. Stopping search."
+            break
+        fi
+
+        # Increment page number
         page=$((page + 1))
     done
+
+    if [ $found -eq 0 ]; then
+        echo "Version $version not found or no suitable APK available."
+        return 1
+    fi
+
+    return 0
 }
 
 # Example usage
-download_resources
 uptodown "youtube"
 uptodown "youtube-music"
