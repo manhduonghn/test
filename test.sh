@@ -21,57 +21,58 @@ extract_filtered_links() {
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
     BEGIN {
         block = ""
-        found_href = 0
+        link = ""
         found_dpi = 0
         found_arch = 0
         found_type = 0
         printed = 0
     }
 
-    # Khi gặp <a class="accent_color", bắt đầu một khối mới
+    # Bắt đầu khối mới từ <a class="accent_color" href
     /<a class="accent_color"/ {
         if (printed) next
-        if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
-            if (match(block, /href="([^"]+)"/, arr)) {
-                print arr[1]
+        if (block != "") {
+            # Kiểm tra khối trước đó
+            if (link != "" && found_dpi && found_arch && found_type && !printed) {
+                print link
                 printed = 1
             }
         }
+        # Bắt đầu khối mới
         block = $0
-        found_href = 1
         found_dpi = 0
         found_arch = 0
         found_type = 0
-    }
-
-    # Thêm dòng vào khối hiện tại
-    {
-        if (found_href && !printed) {
-            block = block "\n" $0
+        link = ""
+        if (match($0, /href="([^"]+)"/, arr)) {
+            link = arr[1]
         }
     }
 
-    # Đánh dấu nếu khối chứa thông tin dpi
-    /<\/div>/ && $0 ~ dpi {
+    # Tiếp tục thêm dòng vào khối hiện tại
+    {
+        if (!printed) block = block "\n" $0
+    }
+
+    # Tìm thấy điều kiện DPI
+    /<div class="table-cell rowheight addseparator expand pad dowrap">/ && $0 ~ dpi {
         found_dpi = 1
     }
 
-    # Đánh dấu nếu khối chứa thông tin arch
-    /<\/div>/ && $0 ~ arch {
+    # Tìm thấy điều kiện ARCH
+    /<div class="table-cell rowheight addseparator expand pad dowrap">/ && $0 ~ arch {
         found_arch = 1
     }
 
-    # Đánh dấu nếu khối chứa thông tin type
-    /<\/span>/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+    # Tìm thấy điều kiện TYPE
+    /<span class="apkm-badge">/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
         found_type = 1
     }
 
-    # Xử lý khối cuối cùng khi kết thúc file
+    # Kiểm tra khối cuối cùng khi kết thúc file
     END {
-        if (block != "" && found_href && found_dpi && found_arch && found_type && !printed) {
-            if (match(block, /href="([^"]+)"/, arr)) {
-                print arr[1]
-            }
+        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) {
+            print link
         }
     }
     '
