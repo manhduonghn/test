@@ -56,6 +56,7 @@ uptodown() {
     url="https://$name.en.uptodown.com/android/versions"
     echo "$version"
     version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
+    echo "$version"
 
     local page=1
     local found=0
