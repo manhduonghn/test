@@ -14,26 +14,30 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    # Truyền các điều kiện vào thông qua các tham số
     dpi=$1
     arch=$2
     type=$3
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
-    # Trích xuất href khi gặp thẻ <a class="accent_color">
+    
+    # Match the anchor tag <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
     }
-    # Kiểm tra điều kiện "dpi"
-    dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
-    # Kiểm tra điều kiện "arch"
-    arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
-    # Kiểm tra điều kiện "type"
-    type && $0 ~ ("<span class=\"apkm-badge\">" type) { type_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+
+    # Match the dpi (e.g., nodpi) condition
+    dpi && $0 ~ ("table-cell.*\\b" dpi "\\b") { dpi_found = 1 }
+
+    # Match the arch (e.g., x86) condition
+    arch && $0 ~ ("table-cell.*\\b" arch "\\b") { arch_found = 1 }
+
+    # Match the type (e.g., APK) condition
+    type && $0 ~ ("<span class=\"apkm-badge\">" type "<\\/span>") { type_found = 1 }
+
+    # Print the link if all conditions are met
     dpi_found && arch_found && type_found && !printed {
         print link
         printed = 1
@@ -42,6 +46,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/redditinc/reddit/reddit-2024-38-0-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "" "" "APK")"
+url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-483-0-0-62-109-release/"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 echo "$url"
