@@ -18,40 +18,63 @@ extract_filtered_links() {
     arch=$2
     type=$3
 
-    # Vòng lặp kiểm tra các link
-    while read -r line; do
-        dpi_found=0
-        arch_found=0
-        type_found=0
+    # Gom tất cả nội dung HTML thành một chuỗi
+    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
+    BEGIN { block = ""; link = ""; dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
+    
+    # Nếu gặp thẻ <div class="table-cell rowheight addseparator">, đóng khối trước đó và bắt đầu khối mới
+    /<div class="table-cell rowheight addseparator/ {
+        if (block != "" && printed == 0) {
+            # Kiểm tra điều kiện
+            if (link != "" && dpi_found && arch_found && type_found) {
+                print link
+                printed = 1
+            }
+        }
+        # Reset block và trạng thái điều kiện
+        block = ""
+        link = ""
+        dpi_found = 0
+        arch_found = 0
+        type_found = 0
+    }
 
-        # Trích xuất href từ thẻ <a class="accent_color">
-        if [[ "$line" =~ <a\ class=\"accent_color\".*href=\"([^\"]+)\" ]]; then
-            link="${BASH_REMATCH[1]}"
-        else
-            continue
-        fi
+    # Gộp tất cả các dòng thuộc cùng một khối
+    {
+        block = block $0
+    }
 
-        # Kiểm tra điều kiện dpi
-        if [[ "$line" =~ "table-cell.*$dpi" ]]; then
-            dpi_found=1
-        fi
+    # Lưu liên kết từ thẻ <a class="accent_color">
+    /<a class="accent_color"/ {
+        if (match($0, /href="([^"]+)"/, arr)) {
+            link = arr[1]
+        }
+    }
 
-        # Kiểm tra điều kiện arch
-        if [[ "$line" =~ "table-cell.*$arch" ]]; then
-            arch_found=1
-        fi
+    # Đánh dấu nếu tìm thấy điều kiện dpi
+    dpi && $0 ~ ("table-cell.*" dpi) {
+        dpi_found = 1
+    }
 
-        # Kiểm tra điều kiện type
-        if [[ "$line" =~ "<span\ class=\"apkm-badge\">$type</span>" ]]; then
-            type_found=1
-        fi
+    # Đánh dấu nếu tìm thấy điều kiện arch
+    arch && $0 ~ ("table-cell.*" arch) {
+        arch_found = 1
+    }
 
-        # Nếu tất cả các điều kiện đều thỏa mãn, in ra và thoát
-        if [[ $dpi_found -eq 1 && $arch_found -eq 1 && $type_found -eq 1 ]]; then
-            echo "$link"
-            break
-        fi
-    done
+    # Đánh dấu nếu tìm thấy điều kiện type
+    type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+        type_found = 1
+    }
+
+    # Khi đọc xong toàn bộ HTML, kiểm tra khối cuối cùng
+    END {
+        if (block != "" && printed == 0) {
+            if (link != "" && dpi_found && arch_found && type_found) {
+                print link
+            }
+        }
+    }
+    '
 }
 
 # URL cần tải
