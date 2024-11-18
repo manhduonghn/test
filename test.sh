@@ -25,7 +25,7 @@ extract_filtered_links() {
     # Kiểm tra "nodpi" trong các dòng HTML
     /table-cell.*nodpi/ { dpi_found = 1 }
     # Kiểm tra "arm64-v8a" trong các dòng HTML
-    /table-cell.*arm64-v8a/ { arch_found = 1 }
+    /table-cell.*universal/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn, in link và reset
@@ -40,7 +40,7 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
+url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 
 # Gọi req và trích xuất thông tin
 url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
