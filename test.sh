@@ -83,5 +83,5 @@ extract_filtered_links() {
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
 # Tải HTML từ URL và trích xuất liên kết hợp lệ
-link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
+link="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 echo "$link"
