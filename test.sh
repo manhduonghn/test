@@ -28,10 +28,10 @@ extract_filtered_links() {
         printed = 0 
     }
     
-    # Lặp qua từng dòng
+    # Lặp qua từng dòng và tìm <a class="accent_color">
     {
-        # Trích xuất giá trị href từ thẻ <a>
-        if (match($0, /href="([^"]+)"/, arr)) {
+        # Trích xuất giá trị href từ thẻ <a class="accent_color">
+        if (match($0, /<a class="accent_color"[^>]*href="([^"]+)"/, arr)) {
             link = arr[1]
         }
         
@@ -47,7 +47,7 @@ extract_filtered_links() {
         if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) { type_found = 1 }
         else { type_found = 0 }
         
-        # Nếu cả 3 điều kiện được thỏa mãn, in ra link và thoát
+        # Nếu tất cả điều kiện thỏa mãn, in ra link
         if (dpi_found && arch_found && type_found && link != "" && !printed) {
             print link
             printed = 1
@@ -60,7 +60,7 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
 
 # Tải HTML và trích xuất link thỏa mãn điều kiện
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
+url=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
 
 # In ra URL tìm được
 echo "$url"
