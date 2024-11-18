@@ -12,7 +12,7 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Hàm trích xuất href thoả mãn điều kiện (lấy kết quả đầu tiên)
+# Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
     awk '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
@@ -28,10 +28,13 @@ extract_filtered_links() {
     /table-cell.*arm64-v8a/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn, in link, thoát ngay lập tức
+    # Khi cả ba điều kiện được thỏa mãn, in link và reset
     dpi_found && arch_found && bundle_found {
         print link
-        exit
+        dpi_found = 0
+        arch_found = 0
+        bundle_found = 0
+        link = ""
     }
     '
 }
@@ -40,5 +43,6 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-url=$(req - "$url" | extract_filtered_links)
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | head -n 1)"
+
 echo "$url"
