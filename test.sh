@@ -35,7 +35,7 @@ extract_filtered_links() {
     arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
     type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
     
-    # Khi không đủ điều kiện thì reset các biến
+    # Khi không đủ điều kiện thì reset các biến và tiếp tục tìm
     !(dpi_found && arch_found && type_found) {
         dpi_found = 0
         arch_found = 0
@@ -47,6 +47,9 @@ extract_filtered_links() {
         print link
         printed = 1
     }
+    
+    # Sau khi in ra 1 link hợp lệ, reset các biến và tiếp tục tìm link tiếp theo
+    printed == 1 { dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
     '
 }
 
