@@ -19,38 +19,51 @@ extract_filtered_links() {
     arch=$2
     type=$3
 
+    # Biến lưu trạng thái các điều kiện
+    found_dpi=0
+    found_arch=0
+    found_type=0
+    link=""
+
+    # Lặp qua các dòng để xử lý các điều kiện
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { 
-        link = ""; 
-        dpi_found = 0; 
-        arch_found = 0; 
-        type_found = 0; 
-        printed = 0 
+    BEGIN {
+        # Biến kiểm tra tình trạng điều kiện
+        found_dpi = 0
+        found_arch = 0
+        found_type = 0
+        link = ""
     }
-    
-    # Lặp qua từng dòng và tìm các thẻ <a class="accent_color">
+
+    # Xử lý mỗi dòng HTML
     {
-        # Trích xuất giá trị href từ thẻ <a class="accent_color">
+        # Kiểm tra href của thẻ <a class="accent_color">
         if (match($0, /<a class="accent_color"[^>]*href="([^"]+)"/, arr)) {
-            link = arr[1]
+            link = arr[1]  # Lưu giá trị href
         }
 
-        # Kiểm tra điều kiện "type" từ <span class="apkm-badge">
-        if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) { type_found = 1 }
-        else { type_found = 0 }
+        # Kiểm tra điều kiện dpi, arch và type
+        if (dpi && $0 ~ ("<div class=\"table-cell" && $0 ~ dpi)) {
+            found_dpi = 1
+        } else {
+            found_dpi = 0
+        }
 
-        # Kiểm tra điều kiện "arch" từ <div class="table-cell">
-        if (arch && $0 ~ ("<div class=\"table-cell" && $0 ~ arch)) { arch_found = 1 }
-        else { arch_found = 0 }
+        if (arch && $0 ~ ("<div class=\"table-cell" && $0 ~ arch)) {
+            found_arch = 1
+        } else {
+            found_arch = 0
+        }
 
-        # Kiểm tra điều kiện "dpi" từ <div class="table-cell">
-        if (dpi && $0 ~ ("<div class=\"table-cell" && $0 ~ dpi)) { dpi_found = 1 }
-        else { dpi_found = 0 }
+        if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) {
+            found_type = 1
+        } else {
+            found_type = 0
+        }
 
         # Nếu tất cả điều kiện thỏa mãn, in ra link
-        if (dpi_found && arch_found && type_found && link != "" && !printed) {
+        if (found_dpi && found_arch && found_type && link != "") {
             print link
-            printed = 1
         }
     }
     '
