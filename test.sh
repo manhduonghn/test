@@ -28,23 +28,26 @@ extract_filtered_links() {
         printed = 0 
     }
     
-    # Truy xuất các giá trị lần lượt theo từng nhóm (href, type, arch, dpi)
+    # Lặp qua từng dòng
     {
-        # Kiểm tra điều kiện cho href
+        # Trích xuất giá trị href từ thẻ <a>
         if (match($0, /href="([^"]+)"/, arr)) {
             link = arr[1]
         }
         
         # Kiểm tra điều kiện "dpi"
         if (dpi && $0 ~ ("table-cell.*" dpi)) { dpi_found = 1 }
+        else { dpi_found = 0 }
         
         # Kiểm tra điều kiện "arch"
         if (arch && $0 ~ ("table-cell.*" arch)) { arch_found = 1 }
+        else { arch_found = 0 }
         
         # Kiểm tra điều kiện "type"
         if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) { type_found = 1 }
+        else { type_found = 0 }
         
-        # Kiểm tra xem tất cả các điều kiện đã thỏa mãn hay chưa
+        # Nếu cả 3 điều kiện được thỏa mãn, in ra link và thoát
         if (dpi_found && arch_found && type_found && link != "" && !printed) {
             print link
             printed = 1
