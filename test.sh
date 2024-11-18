@@ -24,8 +24,8 @@ extract_filtered_links() {
     }
     # Kiểm tra "nodpi" trong các dòng HTML
     /table-cell.*nodpi/ { dpi_found = 1 }
-    # Kiểm tra "armeabi-v7a" trong các dòng HTML
-    /table-cell.*armeabi-v7a/ { arch_found = 1 }
+    # Kiểm tra "arm64-v8a" trong các dòng HTML
+    /table-cell.*arm64-v8a/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn, in link và reset
