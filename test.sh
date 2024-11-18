@@ -37,12 +37,10 @@ extract_filtered_links() {
     # Kiểm tra điều kiện "type"
     type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
 
-    # Khi các điều kiện thỏa mãn, in link và reset để tiếp tục tìm link tiếp theo
-    dpi_found && arch_found && type_found {
+    # Khi tất cả điều kiện được thỏa mãn và chưa in link, in ra và dừng
+    dpi_found && arch_found && type_found && !printed {
         print link
-        dpi_found = 0
-        arch_found = 0
-        type_found = 0
+        printed = 1  # Đánh dấu đã in 1 liên kết
     }
     '
 }
