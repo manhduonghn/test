@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Hàm req để tải HTML
+# Function to send HTTP requests
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -12,37 +12,77 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Hàm trích xuất href thoả mãn điều kiện
-extract_filtered_links() {
-    awk '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
-    # Trích xuất href khi gặp thẻ <a class="accent_color">
-    /<a class="accent_color"/ {
-        if (match($0, /href="([^"]+)"/, arr)) {
-            link = arr[1]
-        }
-    }
-    # Kiểm tra "nodpi" trong các dòng HTML
-    /table-cell.*nodpi/ { dpi_found = 1 }
-    # Kiểm tra "arm64-v8a" trong các dòng HTML
-    /table-cell.*arm64-v8a/ { arch_found = 1 }
-    # Kiểm tra "APK" trong các dòng HTML
-    /<span class="apkm-badge">APK/ { bundle_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn, in link và reset
-    dpi_found && arch_found && bundle_found {
-        print link
-        dpi_found = 0
-        arch_found = 0
-        bundle_found = 0
-        link = ""
-    }
-    '
+# Find max version
+max() {
+	local max=0
+	while read -r v || [ -n "$v" ]; do
+		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
+	done
+	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
 }
 
-# URL cần tải
-url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
+# Get largest version (Just compatible with my way of getting versions code)
+get_latest_version() {
+    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
+}
 
-# Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
+# Read highest supported versions from Revanced 
+get_supported_version() {
+    package_name=$1
+    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
+    version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | max | xargs)
+    echo "$version"
+}
 
-echo "$url"
+# Download necessary resources to patch from Github latest release 
+download_resources() {
+    for repo in revanced-patches revanced-cli ; do
+        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
+        page=$(req - 2>/dev/null $githubApiUrl)
+        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
+        while read -r downloadUrl assetName; do
+            req "$assetName" "$downloadUrl" 
+        done <<< "$assetUrls"
+    done
+}
+
+# Function to download a specific APK version
+uptodown() {
+    config_file="./apps/uptodown/$1.json"
+    name=$(jq -r '.name' "$config_file")
+    package=$(jq -r '.package' "$config_file")
+    version=$(jq -r '.version' "$config_file")
+    version="${version:-$(get_supported_version "$package")}"
+    url="https://$name.en.uptodown.com/android/versions"
+    version="${version:-$(req - 2>/dev/null $url | grep -oP 'class="version">\K[^<]+' | get_latest_version)}"
+
+    # Fetch data_code
+    data_code=$(req - "$url" | grep 'detail-app-name' | grep -oP '(?<=data-code=")[^"]+')
+
+    page=1
+    while :; do
+        json=$(req - "https://$name.en.uptodown.com/android/apps/$data_code/versions/$page" | jq -r '.data')
+        
+        # Exit if no valid JSON or no more pages
+        [ -z "$json" ] && break
+        
+        # Search for version URL
+        version_url=$(echo "$json" | jq -r --arg version "$version" 'map(select(.version == $version and .kindFile == "apk")) | .[0] | .versionURL')
+        if [ -n "$version_url" ]; then
+            download_url=$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')
+            [ -n "$download_url" ] && req "$name-v$version.apk" "https://dw.uptodown.com/dwn/$download_url" && break
+        fi
+        
+        # Check if all versions are less than target version
+        all_lower=$(echo "$json" | jq -r --arg version "$version" '.[] | select(.kindFile == "apk") | .version | select(. < $version)' | wc -l)
+        total_versions=$(echo "$json" | jq -r '.[] | select(.kindFile == "apk") | .version' | wc -l)
+        [ "$all_lower" -eq "$total_versions" ] && break
+
+        page=$((page + 1))
+    done
+}
+
+# Example usage
+download_resources
+uptodown "youtube"
+uptodown "youtube-music"
