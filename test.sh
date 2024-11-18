@@ -43,5 +43,5 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/redditinc/reddit/reddit-2024-38-0-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "" "universal" "APK")"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "" "" "APK")"
 echo "$url"
