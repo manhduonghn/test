@@ -28,25 +28,25 @@ extract_filtered_links() {
         printed = 0 
     }
     
-    # Lặp qua từng dòng và tìm <a class="accent_color">
+    # Lặp qua từng dòng và tìm các thẻ <a class="accent_color">
     {
         # Trích xuất giá trị href từ thẻ <a class="accent_color">
         if (match($0, /<a class="accent_color"[^>]*href="([^"]+)"/, arr)) {
             link = arr[1]
         }
-        
-        # Kiểm tra điều kiện "dpi"
-        if (dpi && $0 ~ ("table-cell.*" dpi)) { dpi_found = 1 }
-        else { dpi_found = 0 }
-        
-        # Kiểm tra điều kiện "arch"
-        if (arch && $0 ~ ("table-cell.*" arch)) { arch_found = 1 }
-        else { arch_found = 0 }
-        
-        # Kiểm tra điều kiện "type"
+
+        # Kiểm tra điều kiện "type" từ <span class="apkm-badge">
         if (type && $0 ~ ("<span class=\"apkm-badge\">" type)) { type_found = 1 }
         else { type_found = 0 }
-        
+
+        # Kiểm tra điều kiện "arch" từ <div class="table-cell">
+        if (arch && $0 ~ ("<div class=\"table-cell" && $0 ~ arch)) { arch_found = 1 }
+        else { arch_found = 0 }
+
+        # Kiểm tra điều kiện "dpi" từ <div class="table-cell">
+        if (dpi && $0 ~ ("<div class=\"table-cell" && $0 ~ dpi)) { dpi_found = 1 }
+        else { dpi_found = 0 }
+
         # Nếu tất cả điều kiện thỏa mãn, in ra link
         if (dpi_found && arch_found && type_found && link != "" && !printed) {
             print link
