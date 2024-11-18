@@ -83,6 +83,5 @@ uptodown() {
 }
 
 # Example usage
-download_resources
 uptodown "youtube"
 uptodown "youtube-music"
