@@ -30,25 +30,24 @@ extract_filtered_links() {
     }
     
     # Kiểm tra điều kiện "dpi", "arch", "type"
-    # Nếu các điều kiện không thỏa mãn, reset lại
     dpi && $0 ~ ("table-cell.*" dpi) { dpi_found = 1 }
     arch && $0 ~ ("table-cell.*" arch) { arch_found = 1 }
     type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") { type_found = 1 }
     
-    # Khi không đủ điều kiện thì reset các biến và tiếp tục tìm
+    # Nếu điều kiện không thỏa mãn, reset và tiếp tục tìm
     !(dpi_found && arch_found && type_found) {
         dpi_found = 0
         arch_found = 0
         type_found = 0
     }
     
-    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    # Khi các điều kiện thỏa mãn và chưa in link, in ra và tiếp tục tìm link tiếp theo
     dpi_found && arch_found && type_found && !printed {
         print link
         printed = 1
     }
     
-    # Sau khi in ra 1 link hợp lệ, reset các biến và tiếp tục tìm link tiếp theo
+    # Sau khi in một link hợp lệ, reset để tiếp tục tìm link tiếp theo
     printed == 1 { dpi_found = 0; arch_found = 0; type_found = 0; printed = 0 }
     '
 }
