@@ -65,7 +65,7 @@ extract_filtered_links() {
     }
 
     # Tìm thấy điều kiện TYPE
-    /apkm-badge/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+    /apkm-badge/ && $0 ~ type {
         found_type = 1
     }
 
@@ -80,5 +80,5 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-link=$(req - "$url" | extract_filtered_links "" "" "APK")
+link=$(req - "$url" | extract_filtered_links "" "" "BUNDLE")
 echo "https://www.apkmirror.com$link"
