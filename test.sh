@@ -14,7 +14,8 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    awk '
+    local architecture="$1"
+    awk -v arch="$architecture" '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
@@ -24,8 +25,8 @@ extract_filtered_links() {
     }
     # Kiểm tra "nodpi" trong các dòng HTML
     /table-cell.*nodpi/ { dpi_found = 1 }
-    # Kiểm tra "arm64-v8a" trong các dòng HTML
-    /table-cell.*universal/ { arch_found = 1 }
+    # Kiểm tra kiến trúc phù hợp (sử dụng giá trị của arch)
+    /table-cell/ && $0 ~ arch { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
     # Khi cả ba điều kiện được thỏa mãn, in link và reset
@@ -43,6 +44,6 @@ extract_filtered_links() {
 url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 
 # Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "arm64-v8a" | sed 1q)"
 
 echo "$url"
