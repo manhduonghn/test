@@ -41,9 +41,9 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
+url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
 
 # Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "universal" | sed 1q)"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "arm64-v8a" | sed 1q)"
 
 echo "$url"
