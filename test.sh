@@ -57,12 +57,12 @@ get_latest_version() {
 
 
 get_apkmirror_version() {
-    grep 'fontBlack' | sed -n 's/.*>\(.*\)<\/a> <\/h5>.*/\1/p' | sed 20q
+    grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+' | sed 20q | awk '{print $NF}'
 }
 
 # URL cần tải
 url="https://www.apkmirror.com/uploads/?appcategory=youtube-music"
-version="$(req - $url | grep -oP 'class="fontBlack"[^>]*href="[^"]+"\s*>\K[^<]+' | sed 20q | grep -Evi 'alpha|beta' | awk '{print $NF}' | max)"
+version="${version:-$(req - $url | get_apkmirror_version | get_latest_version)}"
 url="https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-${version//./-}-release/"
 url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
 url="https://www.apkmirror.com$(req - "$url" | grep -oP 'class="[^"]*downloadButton[^"]*"[^>]*href="\K[^"]+')"
