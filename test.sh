@@ -54,6 +54,11 @@ extract_filtered_links() {
         if (!printed) block = block "\n" $0
     }
 
+    # Tìm thấy điều kiện TYPE
+    /apkm-badge/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+        found_type = 1
+    }
+
     # Tìm thấy điều kiện DPI
     /table-cell/ && $0 ~ dpi {
         found_dpi = 1
@@ -62,11 +67,6 @@ extract_filtered_links() {
     # Tìm thấy điều kiện ARCH
     /table-cell/ && $0 ~ arch {
         found_arch = 1
-    }
-
-    # Tìm thấy điều kiện TYPE
-    /apkm-badge/ && $0 ~ type {
-        found_type = 1
     }
 
     # Kiểm tra khối cuối cùng khi kết thúc file
