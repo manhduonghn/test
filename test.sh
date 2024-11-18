@@ -9,7 +9,7 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O -
+         --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
 # Hàm trích xuất href thoả mãn điều kiện
@@ -43,7 +43,7 @@ url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 architecture="${1:-universal}"
 
 # Gọi req và trích xuất thông tin trực tiếp
-result_url=$(req "$url" | extract_filtered_links "$architecture" | sed 1q)
+result_url=$(req - "$url" | extract_filtered_links "$architecture" | sed 1q)
 
 # Kết quả cuối cùng
 echo "https://www.apkmirror.com$result_url"
