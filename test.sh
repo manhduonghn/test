@@ -79,6 +79,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
+url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-130-0-6723-103-release/"
 link=$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")
 echo "https://www.apkmirror.com$link"
