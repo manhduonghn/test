@@ -49,10 +49,10 @@ uptodown() {
         # Look for the target version with kindFile "apk"
         version_url=$(echo "$json" | jq -r --arg version "$version" '[.[] | select(.version == $version and .kindFile == "apk")][0].versionURL')
 
-        if [ -n "$version_url" ]; then
+        if [ -n "$version_url" ] && [ "$version_url" != "null" ]; then
             echo "Found versionURL: $version_url"
-            url="https://dw.uptodown.com/dwn/$(req - $version_url | grep -oP '(?<=data-url=")[^"]+')"
-            req youtube-v$version $url
+            url="https://dw.uptodown.com/dwn/$(req - "$version_url" | grep -oP '(?<=data-url=")[^"]+')"
+            req youtube-v$version "$url"
             found=1
             break
         fi
