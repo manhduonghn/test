@@ -20,48 +20,59 @@ extract_filtered_links() {
 
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
     BEGIN {
-        # Biến để lưu đoạn HTML hiện tại và trạng thái cắt
-        current_block = ""
-        matched_dpi = ""
-        matched_arch = ""
-        matched_type = ""
+        block = ""
+        found_href = 0
+        found_dpi = 0
+        found_arch = 0
+        found_type = 0
     }
 
-    # Bắt đầu một block mới khi gặp thẻ <a class="accent_color">
+    # Bắt đầu một khối mới khi gặp <a class="accent_color">
     /<a class="accent_color"/ {
-        current_block = $0
+        if (block != "" && found_href && found_dpi && found_arch && found_type) {
+            # Nếu thỏa mãn tất cả điều kiện, in link và thoát
+            if (match(block, /href="([^"]+)"/, arr)) {
+                print arr[1]
+                exit
+            }
+        }
+        # Reset trạng thái cho khối mới
+        block = $0
+        found_href = 1
+        found_dpi = 0
+        found_arch = 0
+        found_type = 0
     }
 
     # Thêm dòng mới vào block hiện tại
     {
-        if (current_block != "") {
-            current_block = current_block "\n" $0
+        if (found_href) {
+            block = block "\n" $0
         }
     }
 
-    # Khi gặp dòng chứa thông tin về "dpi", đánh dấu đoạn này phù hợp với dpi
-    /table-cell/ && dpi && $0 ~ dpi {
-        matched_dpi = current_block
+    # Đánh dấu nếu khối hiện tại chứa thông tin dpi
+    /<\/div>/ && $0 ~ dpi {
+        found_dpi = 1
     }
 
-    # Khi gặp dòng chứa thông tin về "arch", đánh dấu đoạn phù hợp với arch (sau khi lọc qua dpi)
-    /table-cell/ && arch && $0 ~ arch && matched_dpi {
-        matched_arch = matched_dpi
-        matched_dpi = ""
+    # Đánh dấu nếu khối hiện tại chứa thông tin arch
+    /<\/div>/ && $0 ~ arch {
+        found_arch = 1
     }
 
-    # Khi gặp dòng chứa thông tin về "type", kiểm tra đoạn cuối cùng
-    /<span class="apkm-badge"/ && type && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") && matched_arch {
-        # Trích xuất href từ đoạn khớp với tất cả các điều kiện
-        if (match(matched_arch, /href="([^"]+)"/, arr)) {
-            print arr[1]
-            exit
+    # Đánh dấu nếu khối hiện tại chứa thông tin type
+    /<\/span>/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+        found_type = 1
+    }
+
+    # Khi đọc xong toàn bộ file, kiểm tra lần cuối
+    END {
+        if (block != "" && found_href && found_dpi && found_arch && found_type) {
+            if (match(block, /href="([^"]+)"/, arr)) {
+                print arr[1]
+            }
         }
-    }
-
-    # Kết thúc block hiện tại nếu gặp dòng mới
-    /<\/div>/ {
-        current_block = ""
     }
     '
 }
