@@ -15,7 +15,7 @@ req() {
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
     awk '
-    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
+    BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0; printed = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
         if (match($0, /href="([^"]+)"/, arr)) {
@@ -28,14 +28,10 @@ extract_filtered_links() {
     /table-cell.*arm64-v8a/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn, in link và reset
-    dpi_found && arch_found && bundle_found {
+    # Khi cả ba điều kiện được thỏa mãn và chưa in link, in ra và thoát
+    dpi_found && arch_found && bundle_found && !printed {
         print link
-        dpi_found = 0
-        arch_found = 0
-        bundle_found = 0
-        link = ""
-        nextfile  # Ngừng xử lý các dòng tiếp theo
+        printed = 1
     }
     '
 }
