@@ -42,6 +42,6 @@ extract_filtered_links() {
 }
 
 # URL cần tải
-url="https://www.apkmirror.com/apk/google-inc/chrome/chrome-131-0-6778-39-release/"
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "arm64-v8a" "APK")"
+url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-46-34-release/"
+url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links "nodpi" "universal" "APK")"
 echo "$url"
