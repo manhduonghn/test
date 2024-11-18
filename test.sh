@@ -9,12 +9,13 @@ req() {
          --header="Upgrade-Insecure-Requests: 1" \
          --header="Cache-Control: max-age=0" \
          --header="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8" \
-         --keep-session-cookies --timeout=30 -nv -O "$@"
+         --keep-session-cookies --timeout=30 -nv -O -
 }
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    awk '
+    local architecture="$1"
+    awk -v arch="$architecture" '
     BEGIN { link = ""; dpi_found = 0; arch_found = 0; bundle_found = 0 }
     # Trích xuất href khi gặp thẻ <a class="accent_color">
     /<a class="accent_color"/ {
@@ -24,17 +25,13 @@ extract_filtered_links() {
     }
     # Kiểm tra "nodpi" trong các dòng HTML
     /table-cell.*nodpi/ { dpi_found = 1 }
-    # Kiểm tra "arm64-v8a" trong các dòng HTML
-    /table-cell.*universal/ { arch_found = 1 }
+    # Kiểm tra kiến trúc (architecture)
+    (arch == "" && /table-cell.*universal/) || /table-cell.*" arch "/ { arch_found = 1 }
     # Kiểm tra "APK" trong các dòng HTML
     /<span class="apkm-badge">APK/ { bundle_found = 1 }
-    # Khi cả ba điều kiện được thỏa mãn, in link và reset
+    # Khi cả ba điều kiện được thỏa mãn, in link
     dpi_found && arch_found && bundle_found {
         print link
-        dpi_found = 0
-        arch_found = 0
-        bundle_found = 0
-        link = ""
     }
     '
 }
@@ -42,7 +39,11 @@ extract_filtered_links() {
 # URL cần tải
 url="https://www.apkmirror.com/apk/google-inc/youtube/youtube-19-45-35-release/"
 
-# Gọi req và trích xuất thông tin
-url="https://www.apkmirror.com$(req - "$url" | extract_filtered_links | sed 1q)"
+# Giá trị architecture (nếu không được truyền vào, mặc định là universal)
+architecture="${1:-universal}"
 
-echo "$url"
+# Gọi req và trích xuất thông tin trực tiếp
+result_url=$(req "$url" | extract_filtered_links "$architecture" | sed 1q)
+
+# Kết quả cuối cùng
+echo "https://www.apkmirror.com$result_url"
