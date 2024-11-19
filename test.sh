@@ -11,6 +11,6 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-url="https://apkpure.net/youtube/com.google.android.youtube/download/19.44.38"
+url="https://apkpure.net/youtube-music/com.google.android.apps.youtube.music/download/7.27.53"
 url=$(req - $url | grep -oP '<a[^>]*id="download_link"[^>]*href="\K[^"]*' | head -n 1)
 req youtube.apk $url
