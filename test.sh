@@ -12,7 +12,7 @@ req() {
 }
 
 url="https://apkpure.net/youtube-music/com.google.android.apps.youtube.music/versions"
-url=$(req - $url | grep -oP 'data-dt-version="\K[^"]*')
+url=$(req - $url | grep -oP 'data-dt-version="\K[^"]*' | sed 10q)
 echo $url
 exit
 
