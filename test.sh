@@ -52,7 +52,7 @@ apkpure() {
     version=$(jq -r '.version' "$config_file")
     url="https://apkpure.net/$name/$package/versions"
     version="${version:-$(get_supported_version "$package")}"
-    version="${$version:-$(req - $url | grep -oP 'data-dt-version="\K[^"]*' | sed 10q | get_latest_version)}"
+    version="${version:-$(req - $url | grep -oP 'data-dt-version="\K[^"]*' | sed 10q | get_latest_version)}"
     url="https://apkpure.net/$name/$package/download/$version"
     url=$(req - $url | grep -oP '<a[^>]*id="download_link"[^>]*href="\K[^"]*' | head -n 1)
     req $name-v$version.apk "$url"
