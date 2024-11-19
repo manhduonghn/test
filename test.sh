@@ -65,7 +65,7 @@ extract_filtered_links() {
     }
 
     # Tìm thấy điều kiện TYPE
-    /apkm-badge/ && $0 ~ ("<span class=\"apkm-badge\">" type "</span>") {
+    /apkm-badge/ && $0 ~ (">" type "</span>") {
         found_type = 1
     }
 
