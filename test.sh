@@ -12,5 +12,5 @@ req() {
 }
 
 url="https://apkpure.net/youtube/com.google.android.youtube/download/19.44.38"
-url=$(req - $url | grep 'id="download_link"')
+url=$(req - $url | grep -oP '<a[^>]*id="download_link"[^>]*href="\K[^"]*')
 echo $url
