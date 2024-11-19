@@ -58,5 +58,6 @@ apkpure() {
     req $name-v$version.apk "$url"
 }
 
+download_resources
 apkpure "youtube"
 apkpure "youtube-music"
