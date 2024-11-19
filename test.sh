@@ -14,24 +14,60 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    local dpi="$1" arch="$2" type="$3"
+    local dpi="$1"
+    local arch="$2"
+    local type="$3"
+
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { block = ""; link = ""; found_dpi = found_arch = found_type = printed = 0 }
+    BEGIN {
+        block = ""
+        link = ""
+        found_dpi = 0
+        found_arch = 0
+        found_type = 0
+        printed = 0
+    }
+
     /<a class="accent_color"/ {
         if (printed) next
-        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) { 
-            print link; printed = 1 
+        
+        if (block != "") {
+            if (link != "" && found_dpi && found_arch && found_type && !printed) {
+                print link
+                printed = 1
+            }
         }
-        block = $0; found_dpi = found_arch = found_type = 0
-        if (match($0, /href="([^"]+)"/, arr)) link = arr[1]
+        
+        block = $0
+        found_dpi = 0
+        found_arch = 0
+        found_type = 0
+        link = ""
+        if (match($0, /href="([^"]+)"/, arr)) {
+            link = arr[1]
+        }
     }
-    { if (!printed) block = block "\n" $0 }
-    /table-cell/ && $0 ~ dpi { found_dpi = 1 }
-    /table-cell/ && $0 ~ arch { found_arch = 1 }
-    /apkm-badge/ && $0 ~ type { found_type = 1 }
+
+    {
+        if (!printed) block = block "\n" $0
+    }
+
+    /table-cell/ && $0 ~ dpi {
+        found_dpi = 1
+    }
+
+    /table-cell/ && $0 ~ arch {
+        found_arch = 1
+    }
+
+    /apkm-badge/ && $0 ~ type {
+        found_type = 1
+    }
+
     END {
-        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed)
+        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) {
             print link
+        }
     }
     '
 }
