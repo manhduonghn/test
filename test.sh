@@ -14,66 +14,24 @@ req() {
 
 # Hàm trích xuất href thoả mãn điều kiện
 extract_filtered_links() {
-    local dpi="$1"
-    local arch="$2"
-    local type="$3"
-
+    local dpi="$1" arch="$2" type="$3"
     awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN {
-        block = ""
-        link = ""
-        found_dpi = 0
-        found_arch = 0
-        found_type = 0
-        printed = 0
-    }
-
-    # Bắt đầu khối mới từ <a class="accent_color" href
+    BEGIN { block = ""; link = ""; found_dpi = found_arch = found_type = printed = 0 }
     /<a class="accent_color"/ {
         if (printed) next
-        if (block != "") {
-            # Kiểm tra khối trước đó
-            if (link != "" && found_dpi && found_arch && found_type && !printed) {
-                print link
-                printed = 1
-            }
+        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) { 
+            print link; printed = 1 
         }
-        # Bắt đầu khối mới
-        block = $0
-        found_dpi = 0
-        found_arch = 0
-        found_type = 0
-        link = ""
-        if (match($0, /href="([^"]+)"/, arr)) {
-            link = arr[1]
-        }
+        block = $0; found_dpi = found_arch = found_type = 0
+        if (match($0, /href="([^"]+)"/, arr)) link = arr[1]
     }
-
-    # Tiếp tục thêm dòng vào khối hiện tại
-    {
-        if (!printed) block = block "\n" $0
-    }
-
-    # Tìm thấy điều kiện DPI
-    /table-cell/ && $0 ~ dpi {
-        found_dpi = 1
-    }
-
-    # Tìm thấy điều kiện ARCH
-    /table-cell/ && $0 ~ arch {
-        found_arch = 1
-    }
-
-    # Tìm thấy điều kiện TYPE
-    /apkm-badge/ && $0 ~ (">" type "</span>") {
-        found_type = 1
-    }
-
-    # Kiểm tra khối cuối cùng khi kết thúc file
+    { if (!printed) block = block "\n" $0 }
+    /table-cell/ && $0 ~ dpi { found_dpi = 1 }
+    /table-cell/ && $0 ~ arch { found_arch = 1 }
+    /apkm-badge/ && $0 ~ (">" type "</span>") { found_type = 1 }
     END {
-        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) {
+        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed)
             print link
-        }
     }
     '
 }
