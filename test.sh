@@ -12,7 +12,7 @@ req() {
 }
 
 url="https://apkpure.net/youtube-music/com.google.android.apps.youtube.music/versions"
-url=$(req - $url | grep 'ver-item-n')
+url=$(req - $url | grep '"ver-item"')
 echo $url
 exit
 
