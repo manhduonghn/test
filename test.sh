@@ -1,4 +1,4 @@
-#!/bin/bash
+l#!/bin/bash
 
 # Hàm req để tải HTML
 req() {
@@ -16,42 +16,16 @@ req() {
 extract_filtered_links() {
     local dpi="$1" arch="$2" type="$3"
 
-    sed -nE '
-    # Đặt trạng thái ban đầu
-    /<a class="accent_color"/ {
-        block = ""
-        link = ""
-        found_dpi = 0
-        found_arch = 0
-        found_type = 0
-    }
-
-    # Lấy link href
-    /<a class="accent_color"/ {
-        if (match($0, /href="([^"]+)"/, arr)) link = arr[1]
-        block = $0
-    }
-
-    # Kiểm tra điều kiện dpi
-    /table-cell/ {
-        if ($0 ~ dpi) found_dpi = 1
-    }
-
-    # Kiểm tra điều kiện arch
-    /table-cell/ {
-        if ($0 ~ arch) found_arch = 1
-    }
-
-    # Kiểm tra điều kiện type
-    /apkm-badge/ {
-        if ($0 ~ (">" type "</span>")) found_type = 1
-    }
-
-    # In link nếu tất cả điều kiện thỏa mãn
-    END {
-        if (link != "" && found_dpi && found_arch && found_type) print link
-    }
-    '
+    # Tách từng block từ <a ...> đến </a>
+    grep -oPz '<a class="accent_color"[^>]*>.*?</a>' | while IFS= read -r -d '' block; do
+        # Kiểm tra xem block có thỏa mãn cả 3 điều kiện không
+        if echo "$block" | grep -q "$dpi" &&
+           echo "$block" | grep -q "$arch" &&
+           echo "$block" | grep -q ">${type}</span>"; then
+            # Trích xuất href nếu tất cả điều kiện đều đúng
+            echo "$block" | sed -nE 's/.*href="([^"]*)".*/\1/p'
+        fi
+    done
 }
 
 
