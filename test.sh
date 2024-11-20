@@ -16,9 +16,9 @@ req() {
 extract_filtered_links() {
     local dpi="$1" arch="$2" type="$3"
 
-    sed -n '/<a class="accent_color"/,/apkm-badge/ {
+    sed -nE '/<a class="accent_color"/,/apkm-badge/ {
         /<a class="accent_color"/ {
-            s/.*href="[^"]*".*/\1/p
+            s/.*href="([^"]*)".*/\1/p
             h
         }
         /table-cell/ {
@@ -38,7 +38,7 @@ extract_filtered_links() {
             g
             p
         }
-    }' input.html
+    }'
 }
 
 
