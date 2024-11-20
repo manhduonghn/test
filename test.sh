@@ -146,3 +146,11 @@ apkpure() {
     url=$(req - $url | grep -oP '<a[^>]*id="download_link"[^>]*href="\K[^"]*' | head -n 1)
     req $name-v$version.apk "$url"
 }
+
+download_resources
+apkmirror "youtube"
+apkmirror "youtube-music"
+uptodown "youtube"
+uptodown "youtube-music"
+apkpure "youtube"
+apkpure "youtube-music"
