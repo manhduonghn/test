@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Hàm req để tải HTML
 req() {
     wget --header="User-Agent: Mozilla/5.0 (Android 13; Mobile; rv:125.0) Gecko/125.0 Firefox/125.0" \
          --header="Content-Type: application/octet-stream" \
@@ -12,25 +11,53 @@ req() {
          --keep-session-cookies --timeout=30 -nv -O "$@"
 }
 
-# Hàm trích xuất href thoả mãn điều kiện
-extract_filtered_links() {
-    local dpi="$1" arch="$2" type="$3"
+# Find max version
+max() {
+	local max=0
+	while read -r v || [ -n "$v" ]; do
+		if [[ ${v//[!0-9]/} -gt ${max//[!0-9]/} ]]; then max=$v; fi
+	done
+	if [[ $max = 0 ]]; then echo ""; else echo "$max"; fi
+}
 
-    # Tách từng block từ <a ...> đến </a>
-    grep -oPz '<a class="accent_color"[^>]*>.*?</a>' | while IFS= read -r -d '' block; do
-        # Kiểm tra xem block có thỏa mãn cả 3 điều kiện không
-        if echo "$block" | grep -q "$dpi" &&
-           echo "$block" | grep -q "$arch" &&
-           echo "$block" | grep -q ">${type}</span>"; then
-            # Trích xuất href nếu tất cả điều kiện đều đúng
-            echo "$block" | sed -nE 's/.*href="([^"]*)".*/\1/p'
-        fi
+# Get largest version (Just compatible with my way of getting versions code)
+get_latest_version() {
+    grep -Evi 'alpha|beta' | grep -oPi '\b\d+(\.\d+)+(?:\-\w+)?(?:\.\d+)?(?:\.\w+)?\b' | max
+}
+
+# Read highest supported versions from Revanced 
+get_supported_version() {
+    package_name=$1
+    output=$(java -jar revanced-cli*.jar list-versions -f "$package_name" patch*.rvp)
+    version=$(echo "$output" | tail -n +3 | sed 's/ (.*)//' | grep -v -w "Any" | max | xargs)
+    echo "$version"
+}
+
+# Download necessary resources to patch from Github latest release 
+download_resources() {
+    for repo in revanced-patches revanced-cli ; do
+        githubApiUrl="https://api.github.com/repos/revanced/$repo/releases/latest"
+        page=$(req - 2>/dev/null $githubApiUrl)
+        assetUrls=$(echo $page | jq -r '.assets[] | select(.name | endswith(".asc") | not) | "\(.browser_download_url) \(.name)"')
+        while read -r downloadUrl assetName; do
+            req "$assetName" "$downloadUrl" 
+        done <<< "$assetUrls"
     done
 }
 
+apkpure() {
+    config_file="./apps/apkpure/$1.json"
+    name=$(jq -r '.name' "$config_file")
+    package=$(jq -r '.package' "$config_file")
+    version=$(jq -r '.version' "$config_file")
+    url="https://apkpure.net/$name/$package/versions"
+    version="${version:-$(get_supported_version "$package")}"
+    version="${version:-$(req - $url | grep -oP 'data-dt-version="\K[^"]*' | sed 10q | get_latest_version)}"
+    url="https://apkpure.net/$name/$package/download/$version"
+    url=$(req - $url | grep -oP '<a[^>]*id="download_link"[^>]*href="\K[^"]*' | head -n 1)
+    req $name-v$version.apk "$url"
+}
 
-# URL cần tải
-url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-link=$(req - "$url" | grep -oPz '<a class="accent_color"[^>]*>.*?<div class="table-cell rowheight addseparator expand pad dowrap">')
-
-echo "$link"
+download_resources
+apkpure "youtube"
+apkpure "youtube-music"
