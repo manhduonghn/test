@@ -51,7 +51,7 @@ extract_filtered_links() {
     END {
         if (link != "" && found_dpi && found_arch && found_type) print link
     }
-    ' input.html
+    '
 }
 
 
