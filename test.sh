@@ -31,5 +31,6 @@ extract_filtered_links() {
 
 # URL cần tải
 url="https://www.apkmirror.com/apk/facebook-2/messenger/messenger-484-0-0-68-109-release/"
-link=$(req - "$url" | extract_filtered_links "" "" "BUNDLE")
-echo "https://www.apkmirror.com$link"
+link=$(req - "$url" | grep -oPz '<a class="accent_color"[^>]*>.*?</a>')
+
+echo "$link"
