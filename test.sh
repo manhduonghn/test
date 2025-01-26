@@ -50,25 +50,31 @@ download_resources() {
 # Filtered key words to extract link
 extract_filtered_links() {
     local dpi="$1" arch="$2" type="$3"
-    awk -v dpi="$dpi" -v arch="$arch" -v type="$type" '
-    BEGIN { block = ""; link = ""; found_dpi = found_arch = found_type = printed = 0 }
-    /<a class="accent_color"/ {
-        if (printed) next
-        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed) { 
-            print link; printed = 1 
+    
+    perl -ne '
+        BEGIN {
+            $block = ""; $link = ""; $found_dpi = $found_arch = $found_type = $printed = 0;
         }
-        block = $0; found_dpi = found_arch = found_type = 0
-        if (match($0, /href="([^"]+)"/, arr)) link = arr[1]
-    }
-    { if (!printed) block = block "\n" $0 }
-    /table-cell/ && $0 ~ dpi { found_dpi = 1 }
-    /table-cell/ && $0 ~ arch { found_arch = 1 }
-    /apkm-badge/ && $0 ~ (">" type "</span>") { found_type = 1 }
-    END {
-        if (block != "" && link != "" && found_dpi && found_arch && found_type && !printed)
-            print link
-    }
-    '
+        if (/<a class="accent_color"/) {
+            if ($printed) { next; }
+            if ($block ne "" && $link ne "" && $found_dpi && $found_arch && $found_type && !$printed) {
+                print "$link\n";
+                $printed = 1;
+            }
+            $block = $_; $found_dpi = $found_arch = $found_type = 0;
+            $link = $1 if /href="([^"]+)"/;
+        } else {
+            $block .= $_;
+        }
+        $found_dpi = 1 if /table-cell/ && /'"$dpi"'/;
+        $found_arch = 1 if /table-cell/ && /'"$arch"'/;
+        $found_type = 1 if /apkm-badge/ && />'"$type"'<\/span>/;
+        END {
+            if ($block ne "" && $link ne "" && $found_dpi && $found_arch && $found_type && !$printed) {
+                print "$link\n";
+            }
+        }
+    ' 
 }
 
 # Get some versions of application on APKmirror pages 
